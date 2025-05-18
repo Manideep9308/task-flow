@@ -122,8 +122,8 @@ export default function DashboardPage() {
 
   return (
     <>
-      {/* This div should be flexible and allow horizontal scrolling for columns */}
-      <div className="flex gap-4 md:gap-6 flex-1 overflow-x-auto p-1 pb-4">
+      {/* This div should be flexible and allow horizontal scrolling for columns, taking full available height */}
+      <div className="flex gap-4 md:gap-6 flex-1 overflow-x-auto p-1">
         {KANBAN_COLUMNS.map(column => (
           <div 
             key={column.id} 

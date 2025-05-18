@@ -84,7 +84,7 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 flex-1">
+    <div className="flex flex-col lg:flex-row gap-6 flex-1 h-full"> {/* Ensure parent takes full height */}
       <Card className="lg:w-2/3 shadow-lg flex flex-col">
         <CardHeader>
           <div className="flex justify-between items-center">

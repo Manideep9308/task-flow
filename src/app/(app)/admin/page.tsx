@@ -56,8 +56,8 @@ export default function AdminPage() {
 
   return (
     <>
-      <div className="container mx-auto pt-0 pb-2 md:pb-6"> {/* Removed top padding */}
-        <Card className="shadow-xl mt-2 md:mt-6"> {/* Added margin-top */}
+      <div className="container mx-auto">
+        <Card className="shadow-xl mt-2 md:mt-6">
           <CardHeader className="pb-4">
             <div className="flex items-center gap-3">
               <ShieldCheck className="h-8 w-8 text-primary" />

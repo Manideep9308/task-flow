@@ -25,8 +25,8 @@ export default function TasksPage() {
   };
 
   return (
-    <div className="container mx-auto pt-0 pb-2 md:pb-6"> {/* Removed top padding */}
-      <h1 className="text-3xl font-bold mb-6 mt-2 md:mt-6">Task List</h1> {/* Added margin-top to compensate for removed padding */}
+    <div className="container mx-auto">
+      <h1 className="text-3xl font-bold mb-6 mt-2 md:mt-6">Task List</h1>
       <TaskDataTable tasks={tasks} onEditTask={handleEditTask} />
       
       {editingTask && (

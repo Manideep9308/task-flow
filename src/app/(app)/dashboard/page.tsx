@@ -102,7 +102,7 @@ export default function DashboardPage() {
 
   if (!isMounted || isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-5rem)]"> {/* Adjusted height */}
+      <div className="flex flex-col items-center justify-center h-full">
         <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
         <p className="text-muted-foreground">Loading tasks...</p>
       </div>
@@ -122,12 +122,12 @@ export default function DashboardPage() {
 
   return (
     <>
-      {/* Adjusted height calculation to account for header (4rem) and layout gap (1rem on sm+) */}
-      <div className="flex gap-4 md:gap-6 h-[calc(100vh-5rem-2px)] overflow-x-auto p-1 pb-4"> {/* Subtracting 2px for potential border, ensure it fits */}
+      {/* This div should be flexible and allow horizontal scrolling for columns */}
+      <div className="flex gap-4 md:gap-6 flex-1 overflow-x-auto p-1 pb-4">
         {KANBAN_COLUMNS.map(column => (
           <div 
             key={column.id} 
-            className="flex-1 min-w-[320px] h-full"
+            className="flex-1 min-w-[320px] h-full" // h-full to take height from parent column
             onDragOver={(e) => e.preventDefault()} 
             onDrop={(e) => handleDrop(e, column.id)} 
             data-status-id={column.id} 

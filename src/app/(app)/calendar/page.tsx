@@ -84,9 +84,7 @@ export default function CalendarPage() {
   };
 
   return (
-    // Adjusted height calculation: 100vh - header (4rem) - layout gap (1rem for sm+) 
-    // Removed container and its padding, using flex directly for full height control.
-    <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-5rem)] pt-0 pb-2 md:pb-6">
+    <div className="flex flex-col lg:flex-row gap-6 flex-1">
       <Card className="lg:w-2/3 shadow-lg flex flex-col">
         <CardHeader>
           <div className="flex justify-between items-center">

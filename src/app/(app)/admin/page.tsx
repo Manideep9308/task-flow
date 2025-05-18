@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { getInitials } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button"; // Added import
+import { Button } from "@/components/ui/button";
 
 export default function AdminPage() {
   const { assignableUsers } = useAuth();

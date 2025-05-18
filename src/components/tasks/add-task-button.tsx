@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -24,7 +25,7 @@ export function AddTaskButton() {
           Add Task
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[625px]">
+      <DialogContent className="sm:max-w-[625px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Task</DialogTitle>
           <DialogDescription>

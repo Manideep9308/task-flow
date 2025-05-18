@@ -1,3 +1,4 @@
+
 "use client";
 
 import { TaskDataTable } from '@/components/tasks/task-data-table';
@@ -30,7 +31,7 @@ export default function TasksPage() {
       
       {editingTask && (
         <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-          <DialogContent className="sm:max-w-[625px]">
+          <DialogContent className="sm:max-w-[625px] max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit Task</DialogTitle>
               <DialogDescription>

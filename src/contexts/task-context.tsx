@@ -1,18 +1,10 @@
+
 "use client";
 
 import type { Task, TaskStatus, TaskPriority, TaskFile } from '@/lib/types';
 import { mockTasks } from '@/lib/mock-data';
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid'; // Added for generating unique IDs
-
-// Dynamically import uuid for client-side usage to avoid SSR issues
-let generateId = () => '';
-if (typeof window !== 'undefined') {
-  import('uuid').then(uuidModule => {
-    generateId = uuidModule.v4;
-  });
-}
-
+import { v4 as uuidv4 } from 'uuid';
 
 interface TaskContextType {
   tasks: Task[];
@@ -30,7 +22,19 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const [tasks, setTasks] = useState<Task[]>(() => {
     if (typeof window !== 'undefined') {
       const localData = localStorage.getItem('tasks');
-      return localData ? JSON.parse(localData) : mockTasks;
+      try {
+        // Ensure data is valid JSON and an array before parsing
+        if (localData) {
+            const parsedData = JSON.parse(localData);
+            if (Array.isArray(parsedData)) {
+                return parsedData;
+            }
+        }
+      } catch (error) {
+        console.error("Error parsing tasks from localStorage:", error);
+        // Fallback to mockTasks if localStorage data is corrupted
+      }
+      return mockTasks;
     }
     return mockTasks;
   });
@@ -42,13 +46,14 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   }, [tasks]);
 
   const addTask = useCallback((taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'order' | 'status'> & { status?: TaskStatus }) => {
+    const newTaskStatus = taskData.status || 'todo';
     const newTask: Task = {
       ...taskData,
-      id: generateId(),
-      status: taskData.status || 'todo',
+      id: uuidv4(), // Use direct uuidv4 import
+      status: newTaskStatus,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      order: tasks.filter(t => t.status === (taskData.status || 'todo')).length,
+      order: tasks.filter(t => t.status === newTaskStatus).length,
     };
     setTasks(prevTasks => [...prevTasks, newTask]);
   }, [tasks]);
@@ -71,24 +76,44 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       if (!taskToMove) return prevTasks;
 
       // Remove task from its old position
-      const tasksWithoutMoved = prevTasks.filter(t => t.id !== taskId);
+      let tasksWithoutMoved = prevTasks.filter(t => t.id !== taskId);
       
-      // Update status and order
+      // Update status and order for the moved task
       const movedTask = { ...taskToMove, status: newStatus, order: newOrder, updatedAt: new Date().toISOString() };
 
       // Re-calculate order for tasks in the old column if status changed
       if (taskToMove.status !== newStatus) {
-         tasksWithoutMoved.filter(t => t.status === taskToMove.status).sort((a,b) => a.order - b.order).forEach((t, idx) => t.order = idx);
+         tasksWithoutMoved = tasksWithoutMoved.map(t => {
+            if (t.status === taskToMove.status && t.order > taskToMove.order) {
+                return {...t, order: t.order -1 };
+            }
+            return t;
+         });
       }
       
-      // Insert task into new position and update orders in the new column
-      const targetColumnTasks = tasksWithoutMoved.filter(t => t.status === newStatus);
-      targetColumnTasks.splice(newOrder, 0, movedTask);
-      targetColumnTasks.forEach((t, idx) => t.order = idx);
-
-      const otherTasks = tasksWithoutMoved.filter(t => t.status !== newStatus && t.status !== taskToMove.status);
+      // Adjust orders in the new column: increment order of tasks at or after newOrder
+      tasksWithoutMoved = tasksWithoutMoved.map(t => {
+        if (t.status === newStatus && t.order >= newOrder) {
+            return {...t, order: t.order + 1};
+        }
+        return t;
+      });
       
-      return [...otherTasks, ...targetColumnTasks, ...tasksWithoutMoved.filter(t => t.status === taskToMove.status && t.id !== taskId)].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+      // Add the moved task
+      const finalTasks = [...tasksWithoutMoved, movedTask];
+
+      // Sort tasks within each status group by order for consistency
+      const statusGroups = finalTasks.reduce((acc, task) => {
+        acc[task.status] = acc[task.status] || [];
+        acc[task.status].push(task);
+        return acc;
+      }, {} as Record<TaskStatus, Task[]>);
+
+      for (const statusKey in statusGroups) {
+        statusGroups[statusKey as TaskStatus].sort((a,b) => a.order - b.order);
+      }
+      
+      return Object.values(statusGroups).flat();
     });
   }, []);
 

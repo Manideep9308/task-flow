@@ -20,8 +20,8 @@ body {
     --primary: 300 100% 65%;   /* Neon Magenta */
     --primary-foreground: 300 100% 10%; /* Dark Magenta for text on primary */
 
-    --secondary: 100 100% 50%;   /* Neon Lime */
-    --secondary-foreground: 100 100% 10%; /* Dark Lime for text on secondary */
+    --secondary: 180 100% 50%;   /* Neon Cyan */
+    --secondary-foreground: 180 100% 10%; /* Dark Cyan for text on secondary */
 
     --muted: 0 0% 15%; /* Dark Gray */
     --muted-foreground: 0 0% 70%; /* Medium Gray */
@@ -49,8 +49,8 @@ body {
     --sidebar-foreground: 0 0% 95%;
     --sidebar-primary: 300 100% 65%; /* Neon Magenta */
     --sidebar-primary-foreground: 300 100% 10%;
-    --sidebar-accent: 100 100% 50%; /* Neon Lime */
-    --sidebar-accent-foreground: 100 100% 10%;
+    --sidebar-accent: 180 100% 50%; /* Neon Cyan */
+    --sidebar-accent-foreground: 180 100% 10%;
     --sidebar-border: 0 0% 15%;
     --sidebar-ring: 300 90% 60%;
   }
@@ -68,8 +68,8 @@ body {
     --primary: 300 100% 65%;   /* Neon Magenta */
     --primary-foreground: 300 100% 10%; /* Dark Magenta for text on primary */
 
-    --secondary: 100 100% 50%;   /* Neon Lime */
-    --secondary-foreground: 100 100% 10%; /* Dark Lime for text on secondary */
+    --secondary: 180 100% 50%;   /* Neon Cyan */
+    --secondary-foreground: 180 100% 10%; /* Dark Cyan for text on secondary */
 
     --muted: 0 0% 15%; /* Dark Gray */
     --muted-foreground: 0 0% 70%; /* Medium Gray */
@@ -95,8 +95,8 @@ body {
     --sidebar-foreground: 0 0% 95%;
     --sidebar-primary: 300 100% 65%; /* Neon Magenta */
     --sidebar-primary-foreground: 300 100% 10%;
-    --sidebar-accent: 100 100% 50%; /* Neon Lime */
-    --sidebar-accent-foreground: 100 100% 10%;
+    --sidebar-accent: 180 100% 50%; /* Neon Cyan */
+    --sidebar-accent-foreground: 180 100% 10%;
     --sidebar-border: 0 0% 15%;
     --sidebar-ring: 300 90% 60%;
   }

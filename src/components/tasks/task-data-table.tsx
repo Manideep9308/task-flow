@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Task, TaskPriority, TaskStatus } from "@/lib/types";
@@ -39,8 +40,8 @@ type SortConfig = {
 const PriorityIcon = ({ priority }: { priority: TaskPriority }) => {
   switch (priority) {
     case 'high': return <ArrowUp className="h-4 w-4 text-red-500 inline-block mr-1" />;
-    case 'medium': return <Minus className="h-4 w-4 text-yellow-500 inline-block mr-1" />;
-    case 'low': return <ArrowDown className="h-4 w-4 text-green-500 inline-block mr-1" />;
+    case 'medium': return <Minus className="h-4 w-4 text-yellow-500 inline-block mr-1" />; // Consider using theme based color for icon if possible
+    case 'low': return <ArrowDown className="h-4 w-4 text-green-500 inline-block mr-1" />; // Consider using theme based color for icon if possible
     default: return null;
   }
 };
@@ -200,21 +201,26 @@ export function TaskDataTable({ tasks, onEditTask }: TaskDataTableProps) {
                   <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{task.description}</TableCell>
                   <TableCell>
                     <Badge 
-                      variant={task.status === 'done' ? 'default' : 'secondary'}
-                      className={cn({
-                        'bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-200': task.status === 'done',
-                        'bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-200': task.status === 'inprogress',
-                        'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200': task.status === 'todo',
-                      })}
+                      variant={
+                        task.status === 'done' ? 'default' 
+                        : task.status === 'inprogress' ? 'secondary' 
+                        : 'outline'
+                      }
                     >
                       {TASK_STATUSES.find(s => s.value === task.status)?.label}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center">
-                      <PriorityIcon priority={task.priority} />
-                      {TASK_PRIORITIES.find(p => p.value === task.priority)?.label}
-                    </div>
+                     <Badge variant={
+                        task.priority === 'high' ? 'destructive' 
+                        : task.priority === 'medium' ? 'secondary' 
+                        : 'outline'
+                      }
+                      className="capitalize"
+                     >
+                        <PriorityIcon priority={task.priority} />
+                        {task.priority}
+                      </Badge>
                   </TableCell>
                   <TableCell>
                     {task.dueDate ? 

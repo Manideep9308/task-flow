@@ -16,6 +16,7 @@ import { ChevronLeft, ChevronRight, CalendarDays, ListFilter, PlusCircle } from 
 import { AddTaskButton } from '@/components/tasks/add-task-button';
 import { TaskForm } from '@/components/tasks/task-form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 interface DayWithTasks {
   date: Date;
@@ -106,17 +107,27 @@ export default function CalendarPage() {
               DayContent: ({ date }) => {
                 const dayTasks = tasks.filter(task => task.dueDate && isValid(parseISO(task.dueDate)) && isSameDay(parseISO(task.dueDate), date));
                 return (
-                  <>
-                    <div>{format(date, 'd')}</div>
+                  <div className="flex flex-col h-full w-full items-start justify-start">
+                    <span className="self-start">{format(date, 'd')}</span>
                     {dayTasks.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-1">
+                      <div className="mt-1 flex flex-col items-start w-full space-y-0.5 overflow-hidden">
                         {dayTasks.slice(0, 2).map(task => (
-                          <Badge key={task.id} variant="secondary" className="w-full text-xs truncate px-1 py-0.5">{task.title}</Badge>
+                          <div 
+                            key={task.id} 
+                            className="w-full truncate text-xs px-1 py-0.5 rounded-sm bg-primary/20 text-primary-foreground/90 dark:text-primary-foreground/70"
+                            title={task.title}
+                          >
+                            {task.title}
+                          </div>
                         ))}
-                        {dayTasks.length > 2 && <Badge variant="outline" className="w-full text-xs px-1 py-0.5">+{dayTasks.length - 2} more</Badge>}
+                        {dayTasks.length > 2 && (
+                          <div className="w-full text-xs px-1 py-0 text-muted-foreground">
+                            +{dayTasks.length - 2} more
+                          </div>
+                        )}
                       </div>
                     )}
-                  </>
+                  </div>
                 );
               }
             }}
@@ -145,13 +156,8 @@ export default function CalendarPage() {
                        <Badge variant={
                           task.priority === 'high' ? 'destructive' 
                           : task.priority === 'medium' ? 'secondary' 
-                          : 'default'
+                          : 'outline' // Changed from 'default' to 'outline' for low priority
                         }
-                        className={cn({
-                            'bg-red-100 text-red-700 dark:bg-red-800/70 dark:text-red-200': task.priority === 'high',
-                            'bg-yellow-100 text-yellow-700 dark:bg-yellow-700/70 dark:text-yellow-200': task.priority === 'medium',
-                            'bg-green-100 text-green-700 dark:bg-green-800/70 dark:text-green-200': task.priority === 'low',
-                        })}
                        >
                          {task.priority}
                        </Badge>
@@ -160,10 +166,6 @@ export default function CalendarPage() {
                           : task.status === 'inprogress' ? 'secondary' 
                           : 'outline'
                         }
-                         className={cn({
-                            'bg-green-100 text-green-700 dark:bg-green-800/70 dark:text-green-200': task.status === 'done',
-                            'bg-blue-100 text-blue-700 dark:bg-blue-800/70 dark:text-blue-200': task.status === 'inprogress',
-                         })}
                        >
                          {task.status}
                        </Badge>
@@ -195,3 +197,4 @@ export default function CalendarPage() {
     </div>
   );
 }
+

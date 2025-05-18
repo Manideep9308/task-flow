@@ -58,12 +58,6 @@ export default function DashboardPage() {
     
     const currentTask = tasks.find(t => t.id === taskId);
     if (currentTask) {
-      // Optimistic update handled by moveTask internally now if drag and drop is used for it
-      // For now, we use setGlobalTasks for local drag-drop, and moveTask will be called by it.
-      // This part is slightly complex due to optimistic updates + API.
-      // Let's call `moveTask` which handles both optimistic and API update.
-
-      // Original drag-and-drop logic based on setGlobalTasks for immediate local reordering
       const updatedTasks = tasks.map(t => {
         if (t.id === taskId) {
           return { ...t, status: targetStatus, order: newOrder, updatedAt: new Date().toISOString() };
@@ -71,7 +65,6 @@ export default function DashboardPage() {
         return t;
       });
 
-      // Re-order tasks in the source column
       if (currentTask.status !== targetStatus) {
         updatedTasks
           .filter(t => t.status === currentTask.status && t.id !== taskId)
@@ -79,35 +72,29 @@ export default function DashboardPage() {
           .forEach((t, idx) => t.order = idx);
       }
       
-      // Re-order tasks in the target column
       updatedTasks
         .filter(t => t.status === targetStatus)
         .sort((a, b) => a.order - b.order)
         .forEach((t, idx) => {
-             if (t.id === taskId) { t.order = newOrder; } // ensure moved task has correct newOrder
-             else if (idx >= newOrder && t.id !== taskId) { t.order = idx +1; } // shift others
+             if (t.id === taskId) { t.order = newOrder; } 
+             else if (idx >= newOrder && t.id !== taskId) { t.order = idx +1; } 
              else {t.order = idx;}
         });
       
-      // Sort all tasks again to ensure order consistency before setting global state
       const sortedUpdatedTasks = KANBAN_COLUMNS.reduce((acc, col) => {
         const columnTasks = updatedTasks.filter(t => t.status === col.id).sort((a,b) => a.order - b.order);
-        columnTasks.forEach((t, idx) => t.order = idx); // Final re-indexing per column
+        columnTasks.forEach((t, idx) => t.order = idx); 
         return acc.concat(columnTasks);
       }, [] as Task[]);
 
 
-      setGlobalTasks(sortedUpdatedTasks); // Optimistic UI update
+      setGlobalTasks(sortedUpdatedTasks); 
 
       try {
-        await moveTask(taskId, targetStatus, newOrder); // API call
+        await moveTask(taskId, targetStatus, newOrder); 
         toast({ title: "Task Moved", description: `Task "${currentTask.title}" moved to ${KANBAN_COLUMNS.find(c=>c.id===targetStatus)?.title}.` });
       } catch (apiError) {
         toast({ variant: "destructive", title: "Move Failed", description: `Could not move task. ${ (apiError as Error).message }` });
-        // Revert to original tasks if API call fails - TaskProvider might handle this, or do it here.
-        // For simplicity, we assume TaskProvider handles errors/reversions if needed.
-        // Or fetch fresh tasks:
-        // fetchTasks(); 
       }
     }
   };
@@ -115,7 +102,7 @@ export default function DashboardPage() {
 
   if (!isMounted || isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-5rem)]"> {/* Adjusted height */}
         <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
         <p className="text-muted-foreground">Loading tasks...</p>
       </div>
@@ -135,13 +122,14 @@ export default function DashboardPage() {
 
   return (
     <>
-      <div className="flex gap-4 md:gap-6 h-[calc(100vh-8rem)] overflow-x-auto p-1 pb-4">
+      {/* Adjusted height calculation to account for header (4rem) and layout gap (1rem on sm+) */}
+      <div className="flex gap-4 md:gap-6 h-[calc(100vh-5rem-2px)] overflow-x-auto p-1 pb-4"> {/* Subtracting 2px for potential border, ensure it fits */}
         {KANBAN_COLUMNS.map(column => (
           <div 
             key={column.id} 
             className="flex-1 min-w-[320px] h-full"
-            onDragOver={(e) => e.preventDefault()} // Standard HTML D&D API
-            onDrop={(e) => handleDrop(e, column.id)} // Standard HTML D&D API
+            onDragOver={(e) => e.preventDefault()} 
+            onDrop={(e) => handleDrop(e, column.id)} 
             data-status-id={column.id} 
           >
             <KanbanColumn

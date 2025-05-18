@@ -93,9 +93,9 @@ export default function SummaryPage() {
   };
 
   return (
-    <div className="container mx-auto py-2 md:py-6 space-y-8">
+    <div className="container mx-auto pt-0 pb-2 md:pb-6 space-y-8"> {/* Removed top padding */}
       {/* Prompt-based Summary Section */}
-      <Card className="max-w-3xl mx-auto shadow-xl">
+      <Card className="max-w-3xl mx-auto shadow-xl mt-2 md:mt-6"> {/* Added margin-top */}
         <CardHeader>
           <CardTitle className="text-2xl font-bold flex items-center gap-2">
             <Search className="h-6 w-6 text-primary" />

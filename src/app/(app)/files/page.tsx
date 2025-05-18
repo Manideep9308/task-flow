@@ -23,10 +23,10 @@ export default function FilesPage() {
   }, [] as (TaskFile & { taskTitle: string, taskId: string })[]);
 
   return (
-    <div className="container mx-auto py-2 md:py-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+    <div className="container mx-auto pt-0 pb-2 md:pb-6"> {/* Removed top padding */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 mt-2 md:mt-6"> {/* Added margin-top */}
         <h1 className="text-3xl font-bold flex items-center gap-2"><FileArchive className="h-8 w-8 text-primary" /> Shared Files</h1>
-        <Button variant="outline" disabled> {/* Mock upload button */}
+        <Button variant="outline" disabled> 
           <Paperclip className="mr-2 h-4 w-4" />
           Upload File (Mock)
         </Button>

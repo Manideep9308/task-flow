@@ -84,7 +84,9 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="container mx-auto py-2 md:py-6 flex flex-col lg:flex-row gap-6 h-[calc(100vh-10rem)]">
+    // Adjusted height calculation: 100vh - header (4rem) - layout gap (1rem for sm+) 
+    // Removed container and its padding, using flex directly for full height control.
+    <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-5rem)] pt-0 pb-2 md:pb-6">
       <Card className="lg:w-2/3 shadow-lg flex flex-col">
         <CardHeader>
           <div className="flex justify-between items-center">
@@ -116,7 +118,7 @@ export default function CalendarPage() {
             classNames={{
               head_cell: "flex-1 text-center text-muted-foreground rounded-md font-normal text-[0.8rem] capitalize",
               cell: "h-auto aspect-square text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
-              day: "h-full w-full p-1 font-normal aria-selected:opacity-100 justify-start items-start flex flex-col", // Reduced padding from p-1.5
+              day: "h-full w-full p-1 font-normal aria-selected:opacity-100 justify-start items-start flex flex-col", 
               day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground rounded-md",
               day_today: "bg-accent text-accent-foreground rounded-md",
               day_outside: "text-muted-foreground opacity-50 aria-selected:text-muted-foreground aria-selected:bg-accent/50",
@@ -126,13 +128,13 @@ export default function CalendarPage() {
                 const dayTasks = tasks.filter(task => task.dueDate && isValid(parseISO(task.dueDate)) && isSameDay(parseISO(task.dueDate), date));
                 return (
                   <div className="flex flex-col h-full w-full items-start justify-start">
-                    <span className="self-start text-xs">{format(date, 'd')}</span> {/* Ensure date number is small */}
+                    <span className="self-start text-xs">{format(date, 'd')}</span> 
                     {dayTasks.length > 0 && (
-                      <div className="mt-0.5 flex flex-col items-start w-full space-y-px overflow-hidden"> {/* Reduced mt and space-y */}
+                      <div className="mt-0.5 flex flex-col items-start w-full space-y-px overflow-hidden"> 
                         {dayTasks.slice(0, 2).map(task => (
                           <div 
                             key={task.id} 
-                            className="w-full truncate text-[10px] px-0.5 py-px rounded-sm bg-primary/20 text-primary-foreground/90 dark:text-primary-foreground/70 flex items-center gap-0.5" // Made text and padding smaller
+                            className="w-full truncate text-[10px] px-0.5 py-px rounded-sm bg-primary/20 text-primary-foreground/90 dark:text-primary-foreground/70 flex items-center gap-0.5"
                             title={task.title}
                           >
                             {renderAssignedUser(task.id)}
@@ -140,7 +142,7 @@ export default function CalendarPage() {
                           </div>
                         ))}
                         {dayTasks.length > 2 && (
-                          <div className="w-full text-[10px] px-0.5 py-px text-muted-foreground"> {/* Made text smaller */}
+                          <div className="w-full text-[10px] px-0.5 py-px text-muted-foreground"> 
                             +{dayTasks.length - 2} more
                           </div>
                         )}

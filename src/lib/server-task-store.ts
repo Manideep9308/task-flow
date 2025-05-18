@@ -35,6 +35,7 @@ export function createTask(taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'
     files: taskData.files || [],
     order: tasksDB.filter(t => t.status === newTaskStatus).length,
     assignedTo: taskData.assignedTo,
+    imageUrl: taskData.imageUrl, // Ensure imageUrl is included
   };
 
   tasksDB.push(newTask);
@@ -47,7 +48,19 @@ export function updateTaskInDB(taskId: string, updates: Partial<Omit<Task, 'id' 
     return null;
   }
 
-  const updatedTask = { ...tasksDB[taskIndex], ...updates, updatedAt: new Date().toISOString() };
+  // Ensure `imageUrl` can be explicitly set to undefined or null if that's intended by `updates`
+  const updatedTask = { 
+    ...tasksDB[taskIndex], 
+    ...updates, 
+    updatedAt: new Date().toISOString() 
+  };
+  
+  // If imageUrl is part of updates and is explicitly set to undefined, ensure it's handled
+  if (updates.hasOwnProperty('imageUrl') && updates.imageUrl === undefined) {
+    updatedTask.imageUrl = undefined;
+  }
+
+
   tasksDB[taskIndex] = updatedTask;
   return updatedTask;
 }

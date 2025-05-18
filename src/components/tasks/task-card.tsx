@@ -4,19 +4,19 @@
 import type { Task, TaskPriority, User } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'; // Removed AvatarImage as it's not used
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowUp, Minus, ArrowDown, CalendarDays, Paperclip } from 'lucide-react';
 import { cn, getInitials } from '@/lib/utils';
-import { DraggableProvided } from 'react-beautiful-dnd'; // Placeholder type
-import { useAuth } from '@/contexts/auth-context'; // Import useAuth
+import type { DraggableProvided } from 'react-beautiful-dnd'; // Placeholder type
+import { useAuth } from '@/contexts/auth-context';
+import Image from 'next/image'; // Import next/image
 
 interface TaskCardProps {
   task: Task;
   isDragging?: boolean; 
   provided?: DraggableProvided; 
   onClick?: () => void;
-  // assignableUsers prop is removed as we'll use context
 }
 
 const PriorityIcon = ({ priority }: { priority: TaskPriority }) => {
@@ -32,17 +32,19 @@ const PriorityIcon = ({ priority }: { priority: TaskPriority }) => {
   }
 };
 
+// This component is not directly used in Kanban, BasicTaskCard is.
+// However, keeping its structure for reference or future use.
 export function TaskCard({ task, isDragging, provided, onClick }: TaskCardProps) {
-  const { assignableUsers } = useAuth(); // Get assignableUsers from context
+  const { assignableUsers } = useAuth();
   const assignedUser = task.assignedTo ? assignableUsers.find(u => u.id === task.assignedTo) : null;
 
   const cardClasses = cn(
     "mb-4 shadow-md hover:shadow-lg transition-shadow duration-200 cursor-grab",
     isDragging ? "shadow-xl rotate-3" : "",
     {
-      'border-l-4 border-red-500': task.priority === 'high',
-      'border-l-4 border-yellow-500': task.priority === 'medium',
-      'border-l-4 border-green-500': task.priority === 'low',
+      'border-l-4 border-red-500': task.priority === 'high' && !task.imageUrl, // Only show border if no image
+      'border-l-4 border-yellow-500': task.priority === 'medium' && !task.imageUrl,
+      'border-l-4 border-green-500': task.priority === 'low' && !task.imageUrl,
     }
   );
 
@@ -57,7 +59,18 @@ export function TaskCard({ task, isDragging, provided, onClick }: TaskCardProps)
       aria-label={`Task: ${task.title}`}
     >
       <Card className={cardClasses}>
-        <CardHeader className="p-4">
+        {task.imageUrl && (
+          <div className="relative w-full h-32 overflow-hidden rounded-t-lg">
+            <Image 
+              src={task.imageUrl} 
+              alt={`Cover image for ${task.title}`} 
+              layout="fill" 
+              objectFit="cover" 
+              data-ai-hint="task cover"
+            />
+          </div>
+        )}
+        <CardHeader className={cn("p-4", task.imageUrl ? "pt-2" : "")}>
           <div className="flex justify-between items-start">
             <CardTitle className="text-base font-semibold flex-1">{task.title}</CardTitle>
             {assignedUser && (
@@ -65,7 +78,6 @@ export function TaskCard({ task, isDragging, provided, onClick }: TaskCardProps)
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Avatar className="h-7 w-7 text-xs ml-2 shrink-0">
-                      {/* <AvatarImage src={assignedUser.avatarUrl} alt={assignedUser.name} /> */}
                       <AvatarFallback>{getInitials(assignedUser.name || assignedUser.email)}</AvatarFallback>
                     </Avatar>
                   </TooltipTrigger>
@@ -106,37 +118,48 @@ export function TaskCard({ task, isDragging, provided, onClick }: TaskCardProps)
   );
 }
 
-// Fallback for when react-beautiful-dnd is not fully integrated or types are missing
+// BasicTaskCard is used by KanbanColumn
 export function BasicTaskCard({ task, onClick }: Pick<TaskCardProps, 'task' | 'onClick'>) {
-  const { assignableUsers } = useAuth(); // Get assignableUsers from context
+  const { assignableUsers } = useAuth();
   const assignedUser = task.assignedTo ? assignableUsers.find(u => u.id === task.assignedTo) : null;
   
   const cardClasses = cn(
-    "mb-4 shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer",
+    "shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer bg-card", // Ensure bg-card for consistent background
     {
-      'border-l-4 border-red-500': task.priority === 'high',
-      'border-l-4 border-yellow-500': task.priority === 'medium',
-      'border-l-4 border-green-500': task.priority === 'low',
+      // Priority border only if no image, or a more subtle indicator if image exists
+      'border-l-4 border-red-500': task.priority === 'high' && !task.imageUrl,
+      'border-l-4 border-yellow-500': task.priority === 'medium' && !task.imageUrl,
+      'border-l-4 border-green-500': task.priority === 'low' && !task.imageUrl,
     }
   );
 
   return (
     <div
       onClick={onClick}
-      className="mb-3"
+      className="mb-3" 
       role="button"
       aria-label={`Task: ${task.title}`}
     >
       <Card className={cardClasses}>
-        <CardHeader className="p-4">
+        {task.imageUrl && (
+          <div className="relative w-full h-32 overflow-hidden rounded-t-md">
+            <Image 
+              src={task.imageUrl} 
+              alt={`Cover image for ${task.title}`} 
+              layout="fill" 
+              objectFit="cover" 
+              data-ai-hint="task illustration"
+            />
+          </div>
+        )}
+        <CardHeader className={cn("p-4", task.imageUrl ? "pt-2" : "")}>
           <div className="flex justify-between items-start">
-            <CardTitle className="text-base font-semibold flex-1">{task.title}</CardTitle>
+            <CardTitle className="text-base font-semibold flex-1 line-clamp-2">{task.title}</CardTitle>
             {assignedUser && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Avatar className="h-7 w-7 text-xs ml-2 shrink-0">
-                      {/* <AvatarImage src={assignedUser.avatarUrl} alt={assignedUser.name} /> */}
+                    <Avatar className="h-7 w-7 text-xs ml-2 shrink-0 border-2 border-card">
                       <AvatarFallback>{getInitials(assignedUser.name || assignedUser.email)}</AvatarFallback>
                     </Avatar>
                   </TooltipTrigger>

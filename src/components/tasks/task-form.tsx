@@ -38,7 +38,7 @@ const taskFormSchema = z.object({
   }),
   dueDate: z.date().optional(),
   category: z.string().optional(),
-  assignedTo: z.string().optional(),
+  assignedTo: z.string().optional(), // This will hold "" for unassigned or a user ID
   files: z.array(z.object({
     id: z.string(),
     name: z.string(),
@@ -55,6 +55,10 @@ interface TaskFormProps {
   onOpenChange?: (open: boolean) => void; // To close dialog on submit
 }
 
+// Constants for handling 'unassigned' state in the select component
+const UNASSIGNED_FORM_VALUE = ""; // Represents 'unassigned' in react-hook-form's state
+const UNASSIGNED_SELECT_ITEM_VALUE = "__UNASSIGNED__"; // Unique non-empty value for the "Unassigned" SelectItem
+
 export function TaskForm({ task, onOpenChange }: TaskFormProps) {
   const { addTask, updateTask } = useTasks();
   const { assignableUsers } = useAuth();
@@ -70,7 +74,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
       priority: task?.priority || 'medium',
       dueDate: task?.dueDate ? parseISO(task.dueDate) : undefined,
       category: task?.category || '',
-      assignedTo: task?.assignedTo || '',
+      assignedTo: task?.assignedTo || UNASSIGNED_FORM_VALUE, // Default to "" for unassigned
       files: task?.files || [],
     },
   });
@@ -84,7 +88,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
         priority: task.priority,
         dueDate: task.dueDate ? parseISO(task.dueDate) : undefined,
         category: task.category || '',
-        assignedTo: task.assignedTo || '',
+        assignedTo: task.assignedTo || UNASSIGNED_FORM_VALUE,
         files: task.files || [],
       });
       setCurrentFiles(task.files || []);
@@ -96,7 +100,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
         priority: 'medium',
         dueDate: undefined,
         category: '',
-        assignedTo: '',
+        assignedTo: UNASSIGNED_FORM_VALUE,
         files: [],
       });
       setCurrentFiles([]);
@@ -107,7 +111,8 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
     const taskData = {
       ...data,
       dueDate: data.dueDate ? format(data.dueDate, 'yyyy-MM-dd') : undefined,
-      assignedTo: data.assignedTo === '' ? undefined : data.assignedTo, // Store undefined if empty string
+      // If form has UNASSIGNED_FORM_VALUE (""), set assignedTo to undefined for storage
+      assignedTo: data.assignedTo === UNASSIGNED_FORM_VALUE ? undefined : data.assignedTo,
       files: currentFiles,
     };
 
@@ -160,7 +165,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
             name="status"
             control={form.control}
             render={({ field }) => (
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <SelectTrigger id="status">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
@@ -179,7 +184,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
             name="priority"
             control={form.control}
             render={({ field }) => (
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <SelectTrigger id="priority">
                   <SelectValue placeholder="Select priority" />
                 </SelectTrigger>
@@ -245,18 +250,28 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
       <div>
         <Label htmlFor="assignedTo">Assign to</Label>
         <Controller
-            name="assignedTo"
+            name="assignedTo" // field.value here is either "" (UNASSIGNED_FORM_VALUE) or a user ID
             control={form.control}
             render={({ field }) => (
-              <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+              <Select
+                onValueChange={(selectedValueFromSelect) => {
+                  // selectedValueFromSelect is UNASSIGNED_SELECT_ITEM_VALUE or a user ID
+                  if (selectedValueFromSelect === UNASSIGNED_SELECT_ITEM_VALUE) {
+                    field.onChange(UNASSIGNED_FORM_VALUE); // Update form state to ""
+                  } else {
+                    field.onChange(selectedValueFromSelect); // Update form state to user ID
+                  }
+                }}
+                value={field.value === UNASSIGNED_FORM_VALUE || field.value === undefined ? UNASSIGNED_SELECT_ITEM_VALUE : field.value}
+              >
                 <SelectTrigger id="assignedTo" className="w-full">
                   <div className="flex items-center gap-2">
                     <UserCircle className="h-4 w-4 text-muted-foreground" />
-                    <SelectValue placeholder="Select user" />
+                    <SelectValue placeholder="Select user" /> {/* Displays content of selected SelectItem */}
                   </div>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value=""><em>Unassigned</em></SelectItem>
+                  <SelectItem value={UNASSIGNED_SELECT_ITEM_VALUE}><em>Unassigned</em></SelectItem>
                   {assignableUsers.map(user => (
                     <SelectItem key={user.id} value={user.id}>{user.name || user.email}</SelectItem>
                   ))}
@@ -298,3 +313,5 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
     </form>
   );
 }
+
+    

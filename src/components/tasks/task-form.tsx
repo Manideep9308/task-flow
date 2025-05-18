@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Paperclip, Trash2, UploadCloud, UserCircle } from 'lucide-react';
+import { CalendarIcon, Paperclip, Trash2, UploadCloud, UserCircle, Wand2, Loader2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { TASK_PRIORITIES, TASK_STATUSES, DEFAULT_CATEGORIES } from '@/lib/constants';
@@ -26,6 +26,7 @@ import { useTasks } from '@/contexts/task-context';
 import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
+import { suggestTaskDetails, type SuggestTaskDetailsInput } from '@/ai/flows/suggest-task-details-flow';
 
 const taskFormSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters." }),
@@ -64,6 +65,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
   const { assignableUsers } = useAuth();
   const { toast } = useToast();
   const [currentFiles, setCurrentFiles] = useState<TaskFile[]>(task?.files || []);
+  const [isSuggestingDetails, setIsSuggestingDetails] = useState(false);
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
@@ -106,6 +108,41 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
       setCurrentFiles([]);
     }
   }, [task, form]);
+
+  const handleSuggestDetails = async () => {
+    const title = form.getValues('title');
+    const currentDescription = form.getValues('description');
+
+    if (!title.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Title Required',
+        description: 'Please enter a task title before suggesting details.',
+      });
+      return;
+    }
+
+    setIsSuggestingDetails(true);
+    try {
+      const suggestions = await suggestTaskDetails({ title, currentDescription });
+      form.setValue('description', suggestions.suggestedDescription, { shouldValidate: true });
+      form.setValue('category', suggestions.suggestedCategory, { shouldValidate: true });
+      form.setValue('priority', suggestions.suggestedPriority, { shouldValidate: true });
+      toast({
+        title: 'AI Suggestions Applied',
+        description: 'Description, category, and priority have been updated.',
+      });
+    } catch (error) {
+      console.error('Error suggesting task details:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Suggestion Failed',
+        description: error instanceof Error ? error.message : 'Could not get AI suggestions.',
+      });
+    } finally {
+      setIsSuggestingDetails(false);
+    }
+  };
 
   const onSubmit = (data: TaskFormValues) => {
     const taskData = {
@@ -153,9 +190,26 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
         )}
       </div>
 
-      <div>
-        <Label htmlFor="description">Description</Label>
-        <Textarea id="description" {...form.register('description')} placeholder="Add more details about the task..." />
+      <div className="space-y-1">
+        <div className="flex justify-between items-center">
+          <Label htmlFor="description">Description</Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleSuggestDetails}
+            disabled={isSuggestingDetails || !form.watch('title')}
+            className="text-xs"
+          >
+            {isSuggestingDetails ? (
+              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+            ) : (
+              <Wand2 className="mr-1 h-3 w-3" />
+            )}
+            AI Suggest
+          </Button>
+        </div>
+        <Textarea id="description" {...form.register('description')} placeholder="Add more details about the task... or let AI suggest them!" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -306,12 +360,10 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
         <Button type="button" variant="outline" onClick={() => onOpenChange?.(false)}>
           Cancel
         </Button>
-        <Button type="submit" disabled={form.formState.isSubmitting}>
+        <Button type="submit" disabled={form.formState.isSubmitting || isSuggestingDetails}>
           {form.formState.isSubmitting ? 'Saving...' : (task ? 'Save Changes' : 'Create Task')}
         </Button>
       </div>
     </form>
   );
 }
-
-    

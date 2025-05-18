@@ -8,81 +8,81 @@ body {
 
 @layer base {
   :root {
-    --background: 220 20% 8%; /* Very Dark Blue */
-    --foreground: 220 20% 95%; /* Light Gray/White */
+    --background: 0 0% 8%; /* Very Dark Gray/Almost Black */
+    --foreground: 0 0% 95%; /* Light Gray/White */
 
-    --card: 220 20% 12%; /* Slightly Lighter Dark Blue */
-    --card-foreground: 220 20% 95%;
+    --card: 0 0% 12%; /* Slightly Lighter Dark Gray */
+    --card-foreground: 0 0% 95%;
 
-    --popover: 220 20% 12%;
-    --popover-foreground: 220 20% 95%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 180 100% 50%;   /* Neon Cyan */
-    --primary-foreground: 180 100% 10%; /* Dark Cyan for text on primary */
+    --primary: 300 100% 65%;   /* Neon Magenta */
+    --primary-foreground: 300 100% 10%; /* Dark Magenta for text on primary */
 
-    --secondary: 300 100% 65%;   /* Neon Magenta */
-    --secondary-foreground: 300 100% 10%; /* Dark Magenta for text on secondary */
+    --secondary: 100 100% 50%;   /* Neon Lime */
+    --secondary-foreground: 100 100% 10%; /* Dark Lime for text on secondary */
 
-    --muted: 220 20% 15%; /* Dark Gray */
-    --muted-foreground: 220 20% 70%; /* Medium Gray */
+    --muted: 0 0% 15%; /* Dark Gray */
+    --muted-foreground: 0 0% 70%; /* Medium Gray */
 
-    --accent: 100 100% 50%;     /* Neon Lime */
-    --accent-foreground: 100 100% 10%; /* Dark Lime for text on accent */
+    --accent: 45 100% 55%;     /* Neon Orange/Yellow */
+    --accent-foreground: 45 100% 10%; /* Dark Orange/Yellow for text on accent */
 
     --destructive: 0 100% 60%; /* Neon Red */
     --destructive-foreground: 0 0% 100%; /* White */
 
-    --border: 220 20% 20%; /* Subtle Border */
-    --input: 220 20% 18%; /* Slightly lighter than border */
-    --ring: 180 90% 60%; /* Ring color based on Neon Cyan */
+    --border: 0 0% 20%; /* Subtle Border */
+    --input: 0 0% 18%; /* Slightly lighter than border */
+    --ring: 300 90% 60%; /* Ring color based on Neon Magenta */
 
     --radius: 0.5rem;
 
     /* Custom colors */
     --success: 120 100% 50%; /* Neon Green */
     --success-foreground: 0 0% 100%; /* White */
-    --warning: 50 100% 55%; /* Neon Yellow/Orange */
+    --warning: 50 100% 55%; /* Neon Yellow/Orange (can be same as accent or different) */
     --warning-foreground: 50 100% 10%; /* Dark Yellow/Orange */
 
     /* Sidebar specific colors */
-    --sidebar-background: 220 20% 7%; /* Darker than main bg */
-    --sidebar-foreground: 220 20% 95%;
-    --sidebar-primary: 180 100% 50%; /* Neon Cyan */
-    --sidebar-primary-foreground: 180 100% 10%;
-    --sidebar-accent: 300 100% 65%; /* Neon Magenta */
-    --sidebar-accent-foreground: 300 100% 10%;
-    --sidebar-border: 220 20% 15%;
-    --sidebar-ring: 180 90% 60%;
+    --sidebar-background: 0 0% 6%; /* Darker than main bg */
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 300 100% 65%; /* Neon Magenta */
+    --sidebar-primary-foreground: 300 100% 10%;
+    --sidebar-accent: 100 100% 50%; /* Neon Lime */
+    --sidebar-accent-foreground: 100 100% 10%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 300 90% 60%;
   }
 
   .dark {
-    --background: 220 20% 8%; /* Very Dark Blue */
-    --foreground: 220 20% 95%; /* Light Gray/White */
+    --background: 0 0% 8%; /* Very Dark Gray/Almost Black */
+    --foreground: 0 0% 95%; /* Light Gray/White */
 
-    --card: 220 20% 12%; /* Slightly Lighter Dark Blue */
-    --card-foreground: 220 20% 95%;
+    --card: 0 0% 12%; /* Slightly Lighter Dark Gray */
+    --card-foreground: 0 0% 95%;
 
-    --popover: 220 20% 12%;
-    --popover-foreground: 220 20% 95%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 180 100% 50%;   /* Neon Cyan */
-    --primary-foreground: 180 100% 10%; /* Dark Cyan for text on primary */
+    --primary: 300 100% 65%;   /* Neon Magenta */
+    --primary-foreground: 300 100% 10%; /* Dark Magenta for text on primary */
 
-    --secondary: 300 100% 65%;   /* Neon Magenta */
-    --secondary-foreground: 300 100% 10%; /* Dark Magenta for text on secondary */
+    --secondary: 100 100% 50%;   /* Neon Lime */
+    --secondary-foreground: 100 100% 10%; /* Dark Lime for text on secondary */
 
-    --muted: 220 20% 15%; /* Dark Gray */
-    --muted-foreground: 220 20% 70%; /* Medium Gray */
+    --muted: 0 0% 15%; /* Dark Gray */
+    --muted-foreground: 0 0% 70%; /* Medium Gray */
 
-    --accent: 100 100% 50%;     /* Neon Lime */
-    --accent-foreground: 100 100% 10%; /* Dark Lime for text on accent */
+    --accent: 45 100% 55%;     /* Neon Orange/Yellow */
+    --accent-foreground: 45 100% 10%; /* Dark Orange/Yellow for text on accent */
 
     --destructive: 0 100% 60%; /* Neon Red */
     --destructive-foreground: 0 0% 100%; /* White */
 
-    --border: 220 20% 20%; /* Subtle Border */
-    --input: 220 20% 18%; /* Slightly lighter than border */
-    --ring: 180 90% 60%; /* Ring color based on Neon Cyan */
+    --border: 0 0% 20%; /* Subtle Border */
+    --input: 0 0% 18%; /* Slightly lighter than border */
+    --ring: 300 90% 60%; /* Ring color based on Neon Magenta */
 
     /* Custom colors dark */
     --success: 120 100% 50%; /* Neon Green */
@@ -91,14 +91,14 @@ body {
     --warning-foreground: 50 100% 10%; /* Dark Yellow/Orange */
 
     /* Sidebar specific colors dark */
-    --sidebar-background: 220 20% 7%; /* Darker than main bg */
-    --sidebar-foreground: 220 20% 95%;
-    --sidebar-primary: 180 100% 50%; /* Neon Cyan */
-    --sidebar-primary-foreground: 180 100% 10%;
-    --sidebar-accent: 300 100% 65%; /* Neon Magenta */
-    --sidebar-accent-foreground: 300 100% 10%;
-    --sidebar-border: 220 20% 15%;
-    --sidebar-ring: 180 90% 60%;
+    --sidebar-background: 0 0% 6%; /* Darker than main bg */
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 300 100% 65%; /* Neon Magenta */
+    --sidebar-primary-foreground: 300 100% 10%;
+    --sidebar-accent: 100 100% 50%; /* Neon Lime */
+    --sidebar-accent-foreground: 100 100% 10%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 300 90% 60%;
   }
 }
 

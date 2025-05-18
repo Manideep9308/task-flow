@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -17,8 +18,8 @@ export default function SummaryPage() {
   const handleGenerateSummary = async () => {
     setIsLoading(true);
     setError(null);
-    setSummary(null);
-
+    // Keep previous summary visible while loading new one, or setSummary(null);
+    
     const mappedTasks: SummarizeTasksInput['tasks'] = tasks.map(task => ({
       title: task.title,
       description: task.description,
@@ -32,7 +33,8 @@ export default function SummaryPage() {
       setSummary(result.summary);
     } catch (e) {
       console.error("Error generating summary:", e);
-      setError("Failed to generate summary. Please try again.");
+      setError(e instanceof Error ? e.message : "Failed to generate summary. Please try again.");
+      setSummary(null); // Clear previous summary on error
     } finally {
       setIsLoading(false);
     }
@@ -40,55 +42,69 @@ export default function SummaryPage() {
 
   return (
     <div className="container mx-auto py-2 md:py-6">
-      <Card className="max-w-2xl mx-auto shadow-lg">
+      <Card className="max-w-2xl mx-auto shadow-xl">
         <CardHeader>
-          <CardTitle className="text-2xl flex items-center gap-2">
-            <Wand2 className="h-6 w-6 text-primary" />
-            Task Summary Generator
+          <CardTitle className="text-3xl font-bold flex items-center gap-2">
+            <Wand2 className="h-7 w-7 text-primary" />
+            AI Task Summarizer
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-md">
             Let AI provide a concise summary of your current tasks, highlighting key priorities and upcoming deadlines.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          {error && (
+        <CardContent className="space-y-4">
+          {isLoading && (
+             <div className="flex flex-col items-center justify-center p-8 my-4 border rounded-lg bg-muted/40">
+                <Loader2 className="h-12 w-12 animate-spin text-primary mb-3" />
+                <p className="text-lg text-muted-foreground">Generating summary, please wait...</p>
+                <p className="text-sm text-muted-foreground">This may take a few moments.</p>
+            </div>
+          )}
+
+          {error && !isLoading && (
             <Alert variant="destructive" className="mb-4">
-              <AlertTitle>Error</AlertTitle>
+              <AlertTitle className="font-semibold">Error Generating Summary</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          {summary && (
-            <div className="p-4 border rounded-md bg-secondary/50 prose dark:prose-invert max-w-none">
-              <h3 className="text-lg font-semibold mb-2">Generated Summary:</h3>
-              <p className="whitespace-pre-wrap">{summary}</p>
+
+          {summary && !isLoading && !error && (
+            <div className="p-4 border rounded-lg bg-card shadow">
+              <h3 className="text-xl font-semibold mb-3 text-primary">Generated Summary:</h3>
+              <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+                {summary}
+              </div>
             </div>
           )}
-          {isLoading && (
-             <div className="flex items-center justify-center p-8 my-4 border rounded-md bg-muted/30">
-                <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                <p className="ml-4 text-muted-foreground">Generating summary, please wait...</p>
+          
+          {!summary && !isLoading && !error && tasks.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              <p className="text-lg">No tasks to summarize.</p>
+              <p>Add some tasks to your list, then come back to generate a summary.</p>
             </div>
           )}
-          {!summary && !isLoading && tasks.length === 0 && (
-            <p className="text-muted-foreground text-center py-4">
-              You have no tasks to summarize. Add some tasks first!
-            </p>
+           {!summary && !isLoading && !error && tasks.length > 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              <p className="text-lg">Ready to generate your task summary?</p>
+              <p>Click the button below to get started.</p>
+            </div>
           )}
         </CardContent>
         <CardFooter>
           <Button 
             onClick={handleGenerateSummary} 
             disabled={isLoading || tasks.length === 0}
-            className="w-full"
+            className="w-full text-lg py-6"
+            size="lg"
           >
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 Generating...
               </>
             ) : (
               <>
-                <Wand2 className="mr-2 h-4 w-4" />
+                <Wand2 className="mr-2 h-5 w-5" />
                 Generate Summary
               </>
             )}

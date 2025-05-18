@@ -1,7 +1,7 @@
 
 "use client";
 
-import type { Task, TaskPriority, TaskStatus, TaskFile, User } from '@/lib/types';
+import type { Task, TaskPriority, TaskStatus, TaskFile } from '@/lib/types';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Paperclip, Trash2, UploadCloud, UserCircle, Wand2, Loader2 } from 'lucide-react';
+import { CalendarIcon, Paperclip, Trash2, UploadCloud, UserCircle, Wand2, Loader2, ImagePlus } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { TASK_PRIORITIES, TASK_STATUSES, DEFAULT_CATEGORIES } from '@/lib/constants';
@@ -26,7 +26,9 @@ import { useTasks } from '@/contexts/task-context';
 import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
-import { suggestTaskDetails, type SuggestTaskDetailsInput } from '@/ai/flows/suggest-task-details-flow';
+import { suggestTaskDetails } from '@/ai/flows/suggest-task-details-flow';
+import { generateTaskImage } from '@/ai/flows/generate-task-image-flow'; // Corrected import path
+import Image from 'next/image';
 
 const taskFormSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters." }),
@@ -39,7 +41,7 @@ const taskFormSchema = z.object({
   }),
   dueDate: z.date().optional(),
   category: z.string().optional(),
-  assignedTo: z.string().optional(), // This will hold "" for unassigned or a user ID
+  assignedTo: z.string().optional(),
   files: z.array(z.object({
     id: z.string(),
     name: z.string(),
@@ -47,18 +49,18 @@ const taskFormSchema = z.object({
     size: z.number(),
     type: z.string(),
   })).optional(),
+  imageUrl: z.string().optional(),
 });
 
 type TaskFormValues = z.infer<typeof taskFormSchema>;
 
 interface TaskFormProps {
-  task?: Task | null; // For editing
-  onOpenChange?: (open: boolean) => void; // To close dialog on submit
+  task?: Task | null;
+  onOpenChange?: (open: boolean) => void;
 }
 
-// Constants for handling 'unassigned' state in the select component
-const UNASSIGNED_FORM_VALUE = ""; // Represents 'unassigned' in react-hook-form's state
-const UNASSIGNED_SELECT_ITEM_VALUE = "__UNASSIGNED__"; // Unique non-empty value for the "Unassigned" SelectItem
+const UNASSIGNED_FORM_VALUE = "";
+const UNASSIGNED_SELECT_ITEM_VALUE = "__UNASSIGNED__";
 
 export function TaskForm({ task, onOpenChange }: TaskFormProps) {
   const { addTask, updateTask } = useTasks();
@@ -66,6 +68,8 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
   const { toast } = useToast();
   const [currentFiles, setCurrentFiles] = useState<TaskFile[]>(task?.files || []);
   const [isSuggestingDetails, setIsSuggestingDetails] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | undefined>(task?.imageUrl);
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
@@ -76,8 +80,9 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
       priority: task?.priority || 'medium',
       dueDate: task?.dueDate ? parseISO(task.dueDate) : undefined,
       category: task?.category || '',
-      assignedTo: task?.assignedTo || UNASSIGNED_FORM_VALUE, // Default to "" for unassigned
+      assignedTo: task?.assignedTo || UNASSIGNED_FORM_VALUE,
       files: task?.files || [],
+      imageUrl: task?.imageUrl || undefined,
     },
   });
 
@@ -92,8 +97,10 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
         category: task.category || '',
         assignedTo: task.assignedTo || UNASSIGNED_FORM_VALUE,
         files: task.files || [],
+        imageUrl: task.imageUrl || undefined,
       });
       setCurrentFiles(task.files || []);
+      setGeneratedImageUrl(task.imageUrl);
     } else {
       form.reset({
         title: '',
@@ -104,8 +111,10 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
         category: '',
         assignedTo: UNASSIGNED_FORM_VALUE,
         files: [],
+        imageUrl: undefined,
       });
       setCurrentFiles([]);
+      setGeneratedImageUrl(undefined);
     }
   }, [task, form]);
 
@@ -144,13 +153,52 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
     }
   };
 
+  const handleGenerateImage = async () => {
+    const title = form.getValues('title');
+    const description = form.getValues('description');
+
+    if (!title.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Title Required',
+        description: 'Please enter a task title before generating an image.',
+      });
+      return;
+    }
+
+    setIsGeneratingImage(true);
+    setGeneratedImageUrl(undefined); 
+    try {
+      const result = await generateTaskImage({ taskTitle: title, taskDescription: description });
+      if (result.imageDataUri) {
+        setGeneratedImageUrl(result.imageDataUri);
+        form.setValue('imageUrl', result.imageDataUri, { shouldValidate: true });
+        toast({
+          title: 'Image Generated',
+          description: 'Cover image has been generated.',
+        });
+      } else {
+        throw new Error(result.failureReason || 'AI did not return an image URI.');
+      }
+    } catch (error) {
+      console.error('Error generating task image:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Image Generation Failed',
+        description: error instanceof Error ? error.message : 'Could not get AI generated image.',
+      });
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
   const onSubmit = (data: TaskFormValues) => {
     const taskData = {
       ...data,
       dueDate: data.dueDate ? format(data.dueDate, 'yyyy-MM-dd') : undefined,
-      // If form has UNASSIGNED_FORM_VALUE (""), set assignedTo to undefined for storage
       assignedTo: data.assignedTo === UNASSIGNED_FORM_VALUE ? undefined : data.assignedTo,
       files: currentFiles,
+      imageUrl: generatedImageUrl,
     };
 
     if (task && task.id) {
@@ -160,18 +208,19 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
       addTask(taskData);
       toast({ title: "Task Created", description: `"${data.title}" has been added.` });
     }
-    onOpenChange?.(false); 
+    onOpenChange?.(false);
     form.reset();
     setCurrentFiles([]);
+    setGeneratedImageUrl(undefined);
   };
 
   const handleFileAdd = () => {
     const newFile: TaskFile = {
       id: `file-${Date.now()}`,
       name: `document-${currentFiles.length + 1}.pdf`,
-      url: '#',
-      size: Math.floor(Math.random() * (2048 * 1024 - 100 * 1024 + 1)) + (100 * 1024), 
-      type: 'application/pdf',
+      url: '#', // Mock URL
+      size: Math.floor(Math.random() * (2048 * 1024 - 100 * 1024 + 1)) + (100 * 1024), // Mock size
+      type: 'application/pdf', // Mock type
     };
     setCurrentFiles(prev => [...prev, newFile]);
   };
@@ -191,26 +240,58 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
       </div>
 
       <div className="space-y-1">
-        <div className="flex justify-between items-center">
-          <Label htmlFor="description">Description</Label>
-          <Button
+        <Label htmlFor="description">Description</Label>
+        <Textarea id="description" {...form.register('description')} placeholder="Add more details about the task... or let AI suggest them!" />
+      </div>
+      
+      <div className="flex flex-col sm:flex-row gap-2 mt-2">
+         <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={handleSuggestDetails}
             disabled={isSuggestingDetails || !form.watch('title')}
-            className="text-xs"
+            className="text-xs flex-1"
           >
             {isSuggestingDetails ? (
               <Loader2 className="mr-1 h-3 w-3 animate-spin" />
             ) : (
               <Wand2 className="mr-1 h-3 w-3" />
             )}
-            AI Suggest
+            AI Suggest Details
           </Button>
-        </div>
-        <Textarea id="description" {...form.register('description')} placeholder="Add more details about the task... or let AI suggest them!" />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleGenerateImage}
+            disabled={isGeneratingImage || !form.watch('title')}
+            className="text-xs flex-1"
+          >
+            {isGeneratingImage ? (
+              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+            ) : (
+              <ImagePlus className="mr-1 h-3 w-3" />
+            )}
+            Generate Cover Image
+          </Button>
       </div>
+
+      {generatedImageUrl && (
+        <div className="mt-4 space-y-2">
+          <Label>Image Preview</Label>
+          <div className="border rounded-md p-2 flex justify-center items-center bg-muted/20 aspect-video max-h-48 w-full">
+            <Image 
+                src={generatedImageUrl} 
+                alt="Generated task cover" 
+                width={300}
+                height={168}
+                className="rounded-md object-contain max-h-full max-w-full" 
+                data-ai-hint="abstract task"
+            />
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -304,16 +385,15 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
       <div>
         <Label htmlFor="assignedTo">Assign to</Label>
         <Controller
-            name="assignedTo" // field.value here is either "" (UNASSIGNED_FORM_VALUE) or a user ID
+            name="assignedTo"
             control={form.control}
             render={({ field }) => (
               <Select
                 onValueChange={(selectedValueFromSelect) => {
-                  // selectedValueFromSelect is UNASSIGNED_SELECT_ITEM_VALUE or a user ID
                   if (selectedValueFromSelect === UNASSIGNED_SELECT_ITEM_VALUE) {
-                    field.onChange(UNASSIGNED_FORM_VALUE); // Update form state to ""
+                    field.onChange(UNASSIGNED_FORM_VALUE);
                   } else {
-                    field.onChange(selectedValueFromSelect); // Update form state to user ID
+                    field.onChange(selectedValueFromSelect);
                   }
                 }}
                 value={field.value === UNASSIGNED_FORM_VALUE || field.value === undefined ? UNASSIGNED_SELECT_ITEM_VALUE : field.value}
@@ -321,7 +401,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
                 <SelectTrigger id="assignedTo" className="w-full">
                   <div className="flex items-center gap-2">
                     <UserCircle className="h-4 w-4 text-muted-foreground" />
-                    <SelectValue placeholder="Select user" /> {/* Displays content of selected SelectItem */}
+                    <SelectValue placeholder="Select user" />
                   </div>
                 </SelectTrigger>
                 <SelectContent>
@@ -360,7 +440,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
         <Button type="button" variant="outline" onClick={() => onOpenChange?.(false)}>
           Cancel
         </Button>
-        <Button type="submit" disabled={form.formState.isSubmitting || isSuggestingDetails}>
+        <Button type="submit" disabled={form.formState.isSubmitting || isSuggestingDetails || isGeneratingImage}>
           {form.formState.isSubmitting ? 'Saving...' : (task ? 'Save Changes' : 'Create Task')}
         </Button>
       </div>

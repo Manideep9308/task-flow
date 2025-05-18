@@ -1,13 +1,48 @@
+
+"use client"; // Required for useEffect and useRouter
+
+import { useEffect, type ReactNode } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppHeader } from "@/components/layout/app-header";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { TaskProvider } from "@/contexts/task-context";
+import { useAuth } from "@/contexts/auth-context";
+import { Loader2 } from 'lucide-react';
 
 export default function AppLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (!isLoading && !user && pathname !== '/login' && pathname !== '/signup') {
+      router.replace('/login');
+    }
+  }, [user, isLoading, router, pathname]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-muted/40">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  if (!user && pathname !== '/login' && pathname !== '/signup') {
+     // Still loading or redirecting, show loader or null
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-muted/40">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+
   return (
     <TaskProvider>
       <SidebarProvider defaultOpen={true}>

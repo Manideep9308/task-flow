@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -11,32 +12,25 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
-  SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
-import { ClipboardCheck, LayoutDashboard, ListChecks, FileArchive, ScrollText, Settings, LogOut } from 'lucide-react';
+import { ClipboardCheck, LayoutDashboard, ListChecks, FileArchive, ScrollText, Settings, LogOut, CalendarDays } from 'lucide-react';
+import { useAuth } from '@/contexts/auth-context';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/tasks', label: 'Task List', icon: ListChecks },
+  { href: '/calendar', label: 'Calendar', icon: CalendarDays },
   { href: '/files', label: 'Files', icon: FileArchive },
   { href: '/summary', label: 'Summary', icon: ScrollText },
 ];
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
 
   return (
     <Sidebar side="left" variant="sidebar" collapsible="icon">
       <SidebarHeader className="p-4">
-        {/* Mobile trigger for sidebar is part of ui/sidebar, if needed could be controlled via context from header */}
-        {/* <div className="flex items-center justify-between md:hidden">
-           <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold">
-            <ClipboardCheck className="h-6 w-6 text-primary" />
-            <span>TaskFlow</span>
-          </Link>
-          <SidebarTrigger />
-        </div> */}
         <div className="hidden md:flex items-center justify-center gap-2 p-2 group-data-[state=collapsed]:hidden">
            <ClipboardCheck className="h-8 w-8 text-primary" />
            <span className="text-2xl font-bold">TaskFlow</span>
@@ -63,26 +57,26 @@ export function AppSidebar() {
           ))}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="p-2">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip={{ children: "Settings", className: "ml-2" }}>
-              <Link href="#">
-                <Settings />
-                <span>Settings</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip={{ children: "Logout", className: "ml-2" }}>
-              <Link href="#">
+      {user && (
+        <SidebarFooter className="p-2">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip={{ children: "Settings", className: "ml-2" }}>
+                <Link href="#">
+                  <Settings />
+                  <span>Settings</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={logout} tooltip={{ children: "Logout", className: "ml-2" }}>
                 <LogOut />
                 <span>Logout</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
+      )}
     </Sidebar>
   );
 }

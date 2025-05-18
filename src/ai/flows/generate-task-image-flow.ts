@@ -44,20 +44,16 @@ const generateTaskImageFlow = ai.defineFlow(
       }
 
       const {media} = await ai.generate({
-        model: 'googleai/gemini-2.0-flash-exp',
+        model: 'googleai/gemini-2.0-flash-exp', 
         prompt: promptParts,
         config: {
-          responseModalities: ['TEXT', 'IMAGE'],
-          // Optionally add safetySettings if needed
+          responseModalities: ['TEXT', 'IMAGE'], 
         },
       });
 
       if (media?.url) {
         return { imageDataUri: media.url };
       } else {
-        // Check if there might be text output indicating an error from the model
-        // This part depends on how Gemini 2.0 Flash Exp signals image generation failure in its response
-        // For now, we assume if media.url is not present, it's a failure.
         return { failureReason: 'Image data was not returned by the AI model. The model might have refused to generate the image based on the prompt or encountered an issue.' };
       }
     } catch (error) {
@@ -66,9 +62,6 @@ const generateTaskImageFlow = ai.defineFlow(
       if (error instanceof Error) {
         errorMessage = error.message;
       }
-      // It's possible the error object from Genkit/GoogleAI has more specific details
-      // For instance, error.cause or error.details
-      // Add more detailed error logging if available
       return { failureReason: errorMessage };
     }
   }

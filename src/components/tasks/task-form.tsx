@@ -27,7 +27,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { suggestTaskDetails } from '@/ai/flows/suggest-task-details-flow';
-import { generateTaskImage } from '@/ai/flows/generate-task-image-flow'; // Corrected import path
+import { generateTaskImage } from '@/ai/flows/generate-task-image-flow';
 import Image from 'next/image';
 
 const taskFormSchema = z.object({
@@ -218,9 +218,9 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
     const newFile: TaskFile = {
       id: `file-${Date.now()}`,
       name: `document-${currentFiles.length + 1}.pdf`,
-      url: '#', // Mock URL
-      size: Math.floor(Math.random() * (2048 * 1024 - 100 * 1024 + 1)) + (100 * 1024), // Mock size
-      type: 'application/pdf', // Mock type
+      url: '#', 
+      size: Math.floor(Math.random() * (2048 * 1024 - 100 * 1024 + 1)) + (100 * 1024), 
+      type: 'application/pdf', 
     };
     setCurrentFiles(prev => [...prev, newFile]);
   };
@@ -286,7 +286,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
                 alt="Generated task cover" 
                 width={300}
                 height={168}
-                className="rounded-md object-contain max-h-full max-w-full" 
+                className="rounded-md object-contain max-h-full max-w-full"
                 data-ai-hint="abstract task"
             />
           </div>

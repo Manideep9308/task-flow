@@ -50,7 +50,7 @@ export default function AppLayout({
           <AppSidebar />
           <div className="flex flex-col sm:gap-4 print:pl-0 md:peer-data-[state=expanded]:pl-[var(--sidebar-width)] md:peer-data-[state=collapsed]:pl-[var(--sidebar-width-icon)] transition-[padding-left] duration-200 ease-linear">
             <AppHeader />
-            <main className="flex-1 p-4 sm:px-6 sm:py-0 md:gap-8">
+            <main className="flex-1 px-4 sm:px-6 py-0"> {/* Adjusted padding: py-0 added, md:gap-8 removed */}
               {children}
             </main>
           </div>

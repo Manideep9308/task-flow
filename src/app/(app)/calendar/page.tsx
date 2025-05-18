@@ -114,25 +114,25 @@ export default function CalendarPage() {
             onMonthChange={setCurrentMonth}
             className="p-0 rounded-md"
             classNames={{
-              head_cell: "flex-1 text-center text-muted-foreground rounded-md font-normal text-[0.8rem] capitalize", // Changed w-full to flex-1 and added text-center
+              head_cell: "flex-1 text-center text-muted-foreground rounded-md font-normal text-[0.8rem] capitalize",
               cell: "h-auto aspect-square text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
-              day: "h-full w-full p-1.5 font-normal aria-selected:opacity-100 justify-start items-start flex flex-col",
+              day: "h-full w-full p-1 font-normal aria-selected:opacity-100 justify-start items-start flex flex-col", // Reduced padding from p-1.5
               day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground rounded-md",
               day_today: "bg-accent text-accent-foreground rounded-md",
-              day_outside: "text-muted-foreground opacity-50 aria-selected:text-muted-foreground aria-selected:bg-accent/50", // Added aria-selected styling for outside days
+              day_outside: "text-muted-foreground opacity-50 aria-selected:text-muted-foreground aria-selected:bg-accent/50",
             }}
             components={{
               DayContent: ({ date }) => {
                 const dayTasks = tasks.filter(task => task.dueDate && isValid(parseISO(task.dueDate)) && isSameDay(parseISO(task.dueDate), date));
                 return (
                   <div className="flex flex-col h-full w-full items-start justify-start">
-                    <span className="self-start">{format(date, 'd')}</span>
+                    <span className="self-start text-xs">{format(date, 'd')}</span> {/* Ensure date number is small */}
                     {dayTasks.length > 0 && (
-                      <div className="mt-1 flex flex-col items-start w-full space-y-0.5 overflow-hidden">
+                      <div className="mt-0.5 flex flex-col items-start w-full space-y-px overflow-hidden"> {/* Reduced mt and space-y */}
                         {dayTasks.slice(0, 2).map(task => (
                           <div 
                             key={task.id} 
-                            className="w-full truncate text-xs px-1 py-0.5 rounded-sm bg-primary/20 text-primary-foreground/90 dark:text-primary-foreground/70 flex items-center gap-1"
+                            className="w-full truncate text-[10px] px-0.5 py-px rounded-sm bg-primary/20 text-primary-foreground/90 dark:text-primary-foreground/70 flex items-center gap-0.5" // Made text and padding smaller
                             title={task.title}
                           >
                             {renderAssignedUser(task.id)}
@@ -140,7 +140,7 @@ export default function CalendarPage() {
                           </div>
                         ))}
                         {dayTasks.length > 2 && (
-                          <div className="w-full text-xs px-1 py-0 text-muted-foreground">
+                          <div className="w-full text-[10px] px-0.5 py-px text-muted-foreground"> {/* Made text smaller */}
                             +{dayTasks.length - 2} more
                           </div>
                         )}

@@ -1,87 +1,128 @@
 
 "use client";
 
-import type { Task, TaskStatus, TaskPriority, TaskFile } from '@/lib/types';
-import { mockTasks } from '@/lib/mock-data';
+import type { Task, TaskStatus } from '@/lib/types';
+// mockTasks import removed, will fetch from API
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+// v4 as uuidv4 import removed, ID will come from backend
 
 interface TaskContextType {
   tasks: Task[];
-  addTask: (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'order' | 'status'> & { status?: TaskStatus }) => void;
-  updateTask: (taskId: string, updates: Partial<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>>) => void;
-  deleteTask: (taskId: string) => void;
-  moveTask: (taskId: string, newStatus: TaskStatus, newOrder: number) => void;
+  addTask: (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'order' | 'status'> & { status?: TaskStatus }) => Promise<void>;
+  updateTask: (taskId: string, updates: Partial<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>>) => Promise<void>;
+  deleteTask: (taskId: string) => Promise<void>;
+  moveTask: (taskId: string, newStatus: TaskStatus, newOrder: number) => Promise<void>; // Should also be async if calling API
   getTasksByStatus: (status: TaskStatus) => Task[];
-  setTasks: React.Dispatch<React.SetStateAction<Task[]>>; // For drag and drop reordering
+  setTasks: React.Dispatch<React.SetStateAction<Task[]>>; // For local optimistic updates e.g. drag and drop
+  isLoading: boolean;
+  error: string | null;
 }
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
 export const TaskProvider = ({ children }: { children: ReactNode }) => {
-  const [tasks, setTasks] = useState<Task[]>(() => {
-    if (typeof window !== 'undefined') {
-      const localData = localStorage.getItem('tasks');
-      try {
-        // Ensure data is valid JSON and an array before parsing
-        if (localData) {
-            const parsedData = JSON.parse(localData);
-            if (Array.isArray(parsedData)) {
-                return parsedData;
-            }
-        }
-      } catch (error) {
-        console.error("Error parsing tasks from localStorage:", error);
-        // Fallback to mockTasks if localStorage data is corrupted
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchTasks = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/tasks');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch tasks: ${response.statusText}`);
       }
-      return mockTasks;
+      const data: Task[] = await response.json();
+      setTasks(data);
+    } catch (e) {
+      console.error("Error fetching tasks from API:", e);
+      setError(e instanceof Error ? e.message : "An unknown error occurred while fetching tasks.");
+      setTasks([]); // Set to empty or keep stale data, depending on desired UX
+    } finally {
+      setIsLoading(false);
     }
-    return mockTasks;
-  });
+  }, []);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('tasks', JSON.stringify(tasks));
+    fetchTasks();
+  }, [fetchTasks]);
+
+  const addTask = useCallback(async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'order' | 'status'> & { status?: TaskStatus }) => {
+    setError(null);
+    try {
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(taskData),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `Failed to add task: ${response.statusText}` }));
+        throw new Error(errorData.message || `Failed to add task: ${response.statusText}`);
+      }
+      const newTask: Task = await response.json();
+      setTasks(prevTasks => [...prevTasks, newTask]);
+    } catch (e) {
+      console.error("Error adding task via API:", e);
+      setError(e instanceof Error ? e.message : "An unknown error occurred while adding task.");
+      // Optionally re-throw or handle UI feedback
     }
-  }, [tasks]);
-
-  const addTask = useCallback((taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'order' | 'status'> & { status?: TaskStatus }) => {
-    const newTaskStatus = taskData.status || 'todo';
-    const newTask: Task = {
-      ...taskData,
-      id: uuidv4(), // Use direct uuidv4 import
-      status: newTaskStatus,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      order: tasks.filter(t => t.status === newTaskStatus).length,
-    };
-    setTasks(prevTasks => [...prevTasks, newTask]);
-  }, [tasks]);
-
-  const updateTask = useCallback((taskId: string, updates: Partial<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>>) => {
-    setTasks(prevTasks =>
-      prevTasks.map(task =>
-        task.id === taskId ? { ...task, ...updates, updatedAt: new Date().toISOString() } : task
-      )
-    );
   }, []);
 
-  const deleteTask = useCallback((taskId: string) => {
-    setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+  const updateTask = useCallback(async (taskId: string, updates: Partial<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>>) => {
+    setError(null);
+    try {
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `Failed to update task: ${response.statusText}` }));
+        throw new Error(errorData.message || `Failed to update task: ${response.statusText}`);
+      }
+      const updatedTask: Task = await response.json();
+      setTasks(prevTasks =>
+        prevTasks.map(task =>
+          task.id === taskId ? { ...task, ...updatedTask } : task // Use data from API response
+        )
+      );
+    } catch (e) {
+      console.error("Error updating task via API:", e);
+      setError(e instanceof Error ? e.message : "An unknown error occurred while updating task.");
+    }
   }, []);
 
-  const moveTask = useCallback((taskId: string, newStatus: TaskStatus, newOrder: number) => {
+  const deleteTask = useCallback(async (taskId: string) => {
+    setError(null);
+    try {
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+         const errorData = await response.json().catch(() => ({ message: `Failed to delete task: ${response.statusText}` }));
+        throw new Error(errorData.message || `Failed to delete task: ${response.statusText}`);
+      }
+      setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+    } catch (e) {
+      console.error("Error deleting task via API:", e);
+      setError(e instanceof Error ? e.message : "An unknown error occurred while deleting task.");
+    }
+  }, []);
+
+  const moveTask = useCallback(async (taskId: string, newStatus: TaskStatus, newOrder: number) => {
+    // Optimistic UI update
+    const originalTasks = tasks;
+    let movedTask: Task | undefined;
+
     setTasks(prevTasks => {
       const taskToMove = prevTasks.find(t => t.id === taskId);
       if (!taskToMove) return prevTasks;
 
-      // Remove task from its old position
+      movedTask = { ...taskToMove, status: newStatus, order: newOrder, updatedAt: new Date().toISOString() };
+      
       let tasksWithoutMoved = prevTasks.filter(t => t.id !== taskId);
       
-      // Update status and order for the moved task
-      const movedTask = { ...taskToMove, status: newStatus, order: newOrder, updatedAt: new Date().toISOString() };
-
-      // Re-calculate order for tasks in the old column if status changed
       if (taskToMove.status !== newStatus) {
          tasksWithoutMoved = tasksWithoutMoved.map(t => {
             if (t.status === taskToMove.status && t.order > taskToMove.order) {
@@ -91,7 +132,6 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
          });
       }
       
-      // Adjust orders in the new column: increment order of tasks at or after newOrder
       tasksWithoutMoved = tasksWithoutMoved.map(t => {
         if (t.status === newStatus && t.order >= newOrder) {
             return {...t, order: t.order + 1};
@@ -99,10 +139,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
         return t;
       });
       
-      // Add the moved task
       const finalTasks = [...tasksWithoutMoved, movedTask];
 
-      // Sort tasks within each status group by order for consistency
       const statusGroups = finalTasks.reduce((acc, task) => {
         acc[task.status] = acc[task.status] || [];
         acc[task.status].push(task);
@@ -115,7 +153,19 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       
       return Object.values(statusGroups).flat();
     });
-  }, []);
+
+    // API call to update the task on the server
+    if (movedTask) {
+      try {
+        const { id, createdAt, ...updatePayload } = movedTask; // Exclude id and createdAt from payload
+        await updateTask(taskId, updatePayload as Partial<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>>);
+      } catch (e) {
+        console.error("Error syncing moved task with API, reverting UI:", e);
+        setError(e instanceof Error ? e.message : "Error syncing task move.");
+        setTasks(originalTasks); // Revert optimistic update on error
+      }
+    }
+  }, [tasks, updateTask]); // Added updateTask dependency
 
 
   const getTasksByStatus = useCallback((status: TaskStatus): Task[] => {
@@ -123,7 +173,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   }, [tasks]);
 
   return (
-    <TaskContext.Provider value={{ tasks, addTask, updateTask, deleteTask, moveTask, getTasksByStatus, setTasks }}>
+    <TaskContext.Provider value={{ tasks, addTask, updateTask, deleteTask, moveTask, getTasksByStatus, setTasks, isLoading, error }}>
       {children}
     </TaskContext.Provider>
   );

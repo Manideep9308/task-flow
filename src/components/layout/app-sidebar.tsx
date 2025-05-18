@@ -13,7 +13,7 @@ import {
   SidebarMenuButton,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { ClipboardCheck, LayoutDashboard, ListChecks, FileArchive, ScrollText, Settings, LogOut, CalendarDays } from 'lucide-react';
+import { ClipboardCheck, LayoutDashboard, ListChecks, FileArchive, ScrollText, Settings, LogOut, CalendarDays, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
 const navItems = [
@@ -24,9 +24,15 @@ const navItems = [
   { href: '/summary', label: 'Summary', icon: ScrollText },
 ];
 
+const adminNavItems = [
+  { href: '/admin', label: 'Admin Panel', icon: ShieldCheck, role: 'admin' },
+];
+
 export function AppSidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+
+  const availableNavItems = user?.role === 'admin' ? [...navItems, ...adminNavItems] : navItems;
 
   return (
     <Sidebar side="left" variant="sidebar" collapsible="icon">
@@ -41,7 +47,7 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {navItems.map((item) => (
+          {availableNavItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
                 asChild

@@ -1,17 +1,17 @@
 
 "use client";
 
-import type { User } from '@/lib/types'; 
+import type { User, UserRole } from '@/lib/types'; 
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 
-// Mock assignable users
+// Mock assignable users with roles
 const MOCK_USERS_LIST: User[] = [
-  { id: 'user-alice-01', email: 'alice@example.com', name: 'Alice Wonderland' },
-  { id: 'user-bob-02', email: 'bob@example.com', name: 'Bob The Builder' },
-  { id: 'user-charlie-03', email: 'charlie@example.com', name: 'Charlie Brown' },
-  { id: 'user-diana-04', email: 'diana@example.com', name: 'Diana Prince' },
+  { id: 'user-alice-01', email: 'alice@example.com', name: 'Alice Wonderland', role: 'admin' },
+  { id: 'user-bob-02', email: 'bob@example.com', name: 'Bob The Builder', role: 'member' },
+  { id: 'user-charlie-03', email: 'charlie@example.com', name: 'Charlie Brown', role: 'member' },
+  { id: 'user-diana-04', email: 'diana@example.com', name: 'Diana Prince', role: 'member' },
 ];
 
 interface AuthContextType {
@@ -30,29 +30,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  const assignableUsers = MOCK_USERS_LIST; // Provide the mock list
+  const assignableUsers = MOCK_USERS_LIST; 
 
   useEffect(() => {
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error("Error parsing stored user from localStorage:", error);
+        localStorage.removeItem('currentUser'); // Clear corrupted data
+      }
     }
     setIsLoading(false);
   }, []);
 
   const handleAuthSuccess = (email: string) => {
-    // Check if the email belongs to a predefined mock user
     const existingMockUser = MOCK_USERS_LIST.find(u => u.email === email);
     let authUser: User;
 
     if (existingMockUser) {
       authUser = existingMockUser;
     } else {
-      // Create a new user object if not in the mock list
+      // Create a new user object if not in the mock list, default role to 'member'
       authUser = { 
         id: uuidv4(), 
         email, 
-        name: email.split('@')[0] 
+        name: email.split('@')[0],
+        role: 'member' // Default role for new signups
       };
     }
     

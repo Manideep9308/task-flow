@@ -25,10 +25,13 @@ export interface Task {
   assignedTo?: string; // User ID of the assignee
 }
 
+export type UserRole = 'admin' | 'member';
+
 // Basic User type for mock authentication
 export interface User {
   id: string; 
   email: string;
   name?: string;
+  role?: UserRole; // Add role property
   // Add other relevant user fields here, e.g., avatarUrl
 }

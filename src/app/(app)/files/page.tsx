@@ -1,15 +1,17 @@
+
 "use client";
 
 import { useTasks } from '@/contexts/task-context';
 import type { TaskFile } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { DownloadCloud, Eye, LinkIcon, Paperclip } from 'lucide-react';
+import { DownloadCloud, Eye, FileArchive, Paperclip } from 'lucide-react';
 import Link from 'next/link';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function FilesPage() {
-  const { tasks } = useTasks();
+  const { tasks, isLoading: tasksLoading } = useTasks();
 
   const allFiles = tasks.reduce((acc, task) => {
     if (task.files) {
@@ -22,8 +24,8 @@ export default function FilesPage() {
 
   return (
     <div className="container mx-auto py-2 md:py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Shared Files</h1>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <h1 className="text-3xl font-bold flex items-center gap-2"><FileArchive className="h-8 w-8 text-primary" /> Shared Files</h1>
         <Button variant="outline" disabled> {/* Mock upload button */}
           <Paperclip className="mr-2 h-4 w-4" />
           Upload File (Mock)
@@ -38,10 +40,13 @@ export default function FilesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {allFiles.length === 0 ? (
+          {tasksLoading ? (
+            <p className="text-muted-foreground text-center py-8">Loading files...</p>
+          ) : allFiles.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">No files have been shared yet.</p>
           ) : (
             <Table>
+              <TableCaption className="mt-4">A list of all files attached to tasks.</TableCaption>
               <TableHeader>
                 <TableRow>
                   <TableHead>File Name</TableHead>
@@ -65,12 +70,28 @@ export default function FilesPage() {
                       </Link>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" title="View (Mock)">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" title="Download (Mock)">
-                        <DownloadCloud className="h-4 w-4" />
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" aria-label="View file (mock)">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>View File (Mock)</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" aria-label="Download file (mock)">
+                              <DownloadCloud className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Download File (Mock)</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                   </TableRow>
                 ))}

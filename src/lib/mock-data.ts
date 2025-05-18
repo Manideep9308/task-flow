@@ -1,4 +1,11 @@
+
 import type { Task } from './types';
+
+// Using IDs from MOCK_USERS_LIST in auth-context.tsx
+const mockUserAliceId = 'user-alice-01';
+const mockUserBobId = 'user-bob-02';
+const mockUserCharlieId = 'user-charlie-03';
+
 
 export const mockTasks: Task[] = [
   {
@@ -15,6 +22,7 @@ export const mockTasks: Task[] = [
       { id: 'file-1', name: 'style_guide.pdf', url: '#', size: 1024 * 500, type: 'application/pdf' },
     ],
     order: 0,
+    assignedTo: mockUserAliceId,
   },
   {
     id: 'task-2',
@@ -27,6 +35,7 @@ export const mockTasks: Task[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     order: 0,
+    assignedTo: mockUserBobId,
   },
   {
     id: 'task-3',
@@ -38,6 +47,7 @@ export const mockTasks: Task[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     order: 0,
+    // No assignee
   },
   {
     id: 'task-4',
@@ -49,6 +59,7 @@ export const mockTasks: Task[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     order: 1,
+    assignedTo: mockUserCharlieId,
   },
   {
     id: 'task-5',
@@ -72,5 +83,6 @@ export const mockTasks: Task[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     order: 2,
+    assignedTo: mockUserAliceId,
   },
 ];

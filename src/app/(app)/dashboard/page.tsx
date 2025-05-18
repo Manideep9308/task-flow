@@ -1,7 +1,9 @@
+
 "use client";
 
 import { KanbanColumn } from '@/components/tasks/kanban-column';
 import { useTasks } from '@/contexts/task-context';
+// import { useAuth } from '@/contexts/auth-context'; // Not needed here if TaskCard pulls from context
 import { KANBAN_COLUMNS } from '@/lib/constants';
 import type { Task, TaskStatus } from '@/lib/types';
 import { useEffect, useState } from 'react';
@@ -16,19 +18,16 @@ import {
 import { TaskForm } from '@/components/tasks/task-form';
 import { useToast } from '@/hooks/use-toast';
 
-// Conditional import for react-beautiful-dnd if it were installed
-// For now, we will use native HTML Drag and Drop
-// import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
-
 export default function DashboardPage() {
-  const { tasks, getTasksByStatus, moveTask, setTasks: setGlobalTasks } = useTasks();
+  const { tasks, getTasksByStatus, setTasks: setGlobalTasks } = useTasks();
+  // const { assignableUsers } = useAuth(); // Not strictly needed if KanbanColumn/TaskCard get it from context
   const [isMounted, setIsMounted] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    setIsMounted(true); // Ensure component is mounted before trying to use drag and drop or localStorage dependent state
+    setIsMounted(true); 
   }, []);
 
   const handleTaskClick = (task: Task) => {
@@ -36,14 +35,13 @@ export default function DashboardPage() {
     setIsEditModalOpen(true);
   };
 
-  // Native HTML Drag and Drop handlers
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, taskId: string) => {
     e.dataTransfer.setData('taskId', taskId);
     e.dataTransfer.effectAllowed = "move";
   };
   
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault(); // Necessary to allow dropping
+    e.preventDefault(); 
     e.dataTransfer.dropEffect = "move";
   };
 
@@ -57,12 +55,9 @@ export default function DashboardPage() {
 
     const tasksInTargetColumn = getTasksByStatus(targetStatus);
     
-    // Basic reordering: for simplicity, just append. 
-    // A more robust solution would calculate exact position based on drop coordinates.
     let newOrder = tasksInTargetColumn.length;
 
-    // Find the element being dropped onto to calculate position (simplified)
-    const dropTargetCard = (e.target as HTMLElement).closest('[role="button"]'); // Assuming TaskCard has role="button"
+    const dropTargetCard = (e.target as HTMLElement).closest('[role="button"]'); 
     if (dropTargetCard) {
         const siblingCards = Array.from(targetColumnElement.querySelectorAll('[role="button"]'));
         const dropIndex = siblingCards.indexOf(dropTargetCard);
@@ -71,10 +66,8 @@ export default function DashboardPage() {
         }
     }
     
-    // Update task state
     const currentTask = tasks.find(t => t.id === taskId);
     if (currentTask) {
-      // Create a new list of tasks reflecting the change
       const updatedTasks = tasks.map(t => {
         if (t.id === taskId) {
           return { ...t, status: targetStatus, order: newOrder, updatedAt: new Date().toISOString() };
@@ -82,7 +75,6 @@ export default function DashboardPage() {
         return t;
       });
 
-      // Re-order tasks in the source column if status changed
       if (currentTask.status !== targetStatus) {
         updatedTasks
           .filter(t => t.status === currentTask.status && t.id !== taskId)
@@ -90,20 +82,18 @@ export default function DashboardPage() {
           .forEach((t, idx) => t.order = idx);
       }
       
-      // Re-order tasks in the target column
       updatedTasks
         .filter(t => t.status === targetStatus)
         .sort((a, b) => a.order - b.order)
         .forEach((t, idx) => t.order = idx);
 
-      setGlobalTasks(updatedTasks); // Update context/global state
+      setGlobalTasks(updatedTasks); 
       toast({ title: "Task Moved", description: `Task "${currentTask.title}" moved to ${targetStatus}.` });
     }
   };
 
 
   if (!isMounted) {
-    // Optional: return a loading skeleton or null
     return (
       <div className="flex gap-6 h-[calc(100vh-10rem)] overflow-x-auto p-1">
         {KANBAN_COLUMNS.map(column => (
@@ -127,13 +117,14 @@ export default function DashboardPage() {
             className="flex-1 min-w-[320px] h-full"
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, column.id)}
-            data-status-id={column.id} // For drop target identification
+            data-status-id={column.id} 
           >
             <KanbanColumn
               status={column.id}
               title={column.title}
               tasks={getTasksByStatus(column.id)}
               onTaskClick={handleTaskClick}
+              // assignableUsers prop removed
             />
           </div>
         ))}

@@ -1,7 +1,7 @@
 
 "use client";
 
-import type { Task, TaskPriority, TaskStatus } from "@/lib/types";
+import type { Task, TaskPriority, TaskStatus, User } from "@/lib/types";
 import React, { useState, useMemo } from "react";
 import {
   Table,
@@ -22,10 +22,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowUpDown, Filter, ListFilter, ArrowUp, Minus, ArrowDown, CalendarDays, Paperclip } from "lucide-react";
 import { TaskActions } from "./task-actions";
 import { TASK_PRIORITIES, TASK_STATUSES } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { cn, getInitials } from "@/lib/utils";
+import { useAuth } from '@/contexts/auth-context';
 
 interface TaskDataTableProps {
   tasks: Task[];
@@ -40,13 +43,14 @@ type SortConfig = {
 const PriorityIcon = ({ priority }: { priority: TaskPriority }) => {
   switch (priority) {
     case 'high': return <ArrowUp className="h-4 w-4 text-red-500 inline-block mr-1" />;
-    case 'medium': return <Minus className="h-4 w-4 text-yellow-500 inline-block mr-1" />; // Consider using theme based color for icon if possible
-    case 'low': return <ArrowDown className="h-4 w-4 text-green-500 inline-block mr-1" />; // Consider using theme based color for icon if possible
+    case 'medium': return <Minus className="h-4 w-4 text-yellow-500 inline-block mr-1" />;
+    case 'low': return <ArrowDown className="h-4 w-4 text-green-500 inline-block mr-1" />;
     default: return null;
   }
 };
 
 export function TaskDataTable({ tasks, onEditTask }: TaskDataTableProps) {
+  const { assignableUsers } = useAuth();
   const [filter, setFilter] = useState("");
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'createdAt', direction: 'descending' });
   
@@ -60,7 +64,9 @@ export function TaskDataTable({ tasks, onEditTask }: TaskDataTableProps) {
       SorterdTasks = SorterdTasks.filter(task =>
         task.title.toLowerCase().includes(filter.toLowerCase()) ||
         task.description?.toLowerCase().includes(filter.toLowerCase()) ||
-        task.category?.toLowerCase().includes(filter.toLowerCase())
+        task.category?.toLowerCase().includes(filter.toLowerCase()) ||
+        (task.assignedTo && assignableUsers.find(u => u.id === task.assignedTo)?.name?.toLowerCase().includes(filter.toLowerCase())) ||
+        (task.assignedTo && assignableUsers.find(u => u.id === task.assignedTo)?.email?.toLowerCase().includes(filter.toLowerCase()))
       );
     }
 
@@ -73,9 +79,16 @@ export function TaskDataTable({ tasks, onEditTask }: TaskDataTableProps) {
 
     if (sortConfig.key) {
       SorterdTasks.sort((a, b) => {
-        const aValue = a[sortConfig.key!];
-        const bValue = b[sortConfig.key!];
+        let aValue = a[sortConfig.key!];
+        let bValue = b[sortConfig.key!];
 
+        if (sortConfig.key === 'assignedTo') {
+          const userA = assignableUsers.find(u => u.id === a.assignedTo)?.name || '';
+          const userB = assignableUsers.find(u => u.id === b.assignedTo)?.name || '';
+          aValue = userA;
+          bValue = userB;
+        }
+        
         if (aValue === undefined || bValue === undefined) return 0;
         
         let comparison = 0;
@@ -83,7 +96,7 @@ export function TaskDataTable({ tasks, onEditTask }: TaskDataTableProps) {
           comparison = aValue.localeCompare(bValue);
         } else if (typeof aValue === 'number' && typeof bValue === 'number') {
           comparison = aValue - bValue;
-        } else { // Fallback for mixed types or other types - treat as string
+        } else { 
            comparison = String(aValue).localeCompare(String(bValue));
         }
         
@@ -91,17 +104,17 @@ export function TaskDataTable({ tasks, onEditTask }: TaskDataTableProps) {
       });
     }
     return SorterdTasks;
-  }, [tasks, filter, sortConfig, statusFilters, priorityFilters]);
+  }, [tasks, filter, sortConfig, statusFilters, priorityFilters, assignableUsers]);
 
-  const requestSort = (key: keyof Task) => {
+  const requestSort = (key: keyof Task | 'assignedTo') => { // Allow 'assignedTo' for sorting
     let direction: 'ascending' | 'descending' = 'ascending';
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
       direction = 'descending';
     }
-    setSortConfig({ key, direction });
+    setSortConfig({ key: key as keyof Task, direction });
   };
 
-  const getSortIndicator = (key: keyof Task) => {
+  const getSortIndicator = (key: keyof Task | 'assignedTo') => {
     if (sortConfig.key === key) {
       return sortConfig.direction === 'ascending' ? <ArrowUp className="ml-2 h-4 w-4 inline" /> : <ArrowDown className="ml-2 h-4 w-4 inline" />;
     }
@@ -126,12 +139,11 @@ export function TaskDataTable({ tasks, onEditTask }: TaskDataTableProps) {
     });
   };
 
-
   return (
     <div className="w-full">
       <div className="flex items-center py-4 gap-4">
         <Input
-          placeholder="Filter tasks by title, description, category..."
+          placeholder="Filter tasks..."
           value={filter}
           onChange={(event) => setFilter(event.target.value)}
           className="max-w-sm"
@@ -189,13 +201,18 @@ export function TaskDataTable({ tasks, onEditTask }: TaskDataTableProps) {
               <TableHead onClick={() => requestSort('category')} className="cursor-pointer hover:bg-muted/50">
                 Category {getSortIndicator('category')}
               </TableHead>
+              <TableHead onClick={() => requestSort('assignedTo')} className="cursor-pointer hover:bg-muted/50">
+                Assigned To {getSortIndicator('assignedTo')}
+              </TableHead>
               <TableHead>Files</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredTasks.length > 0 ? (
-              filteredTasks.map((task) => (
+              filteredTasks.map((task) => {
+                const assignedUser = task.assignedTo ? assignableUsers.find(u => u.id === task.assignedTo) : null;
+                return (
                 <TableRow key={task.id}>
                   <TableCell className="font-medium">{task.title}</TableCell>
                   <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{task.description}</TableCell>
@@ -232,6 +249,27 @@ export function TaskDataTable({ tasks, onEditTask }: TaskDataTableProps) {
                   </TableCell>
                   <TableCell>{task.category || <span className="text-muted-foreground">-</span>}</TableCell>
                   <TableCell>
+                    {assignedUser ? (
+                       <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-7 w-7 text-xs">
+                                  <AvatarFallback>{getInitials(assignedUser.name || assignedUser.email)}</AvatarFallback>
+                                </Avatar>
+                                <span className="hidden lg:inline text-sm">{assignedUser.name || assignedUser.email}</span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{assignedUser.name || assignedUser.email}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     {task.files && task.files.length > 0 ? (
                       <div className="flex items-center text-sm">
                         <Paperclip className="h-4 w-4 mr-1 text-muted-foreground" />
@@ -243,10 +281,10 @@ export function TaskDataTable({ tasks, onEditTask }: TaskDataTableProps) {
                     <TaskActions task={task} onEdit={onEditTask} />
                   </TableCell>
                 </TableRow>
-              ))
+              )})
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center">
+                <TableCell colSpan={9} className="h-24 text-center">
                   No tasks found.
                 </TableCell>
               </TableRow>
@@ -261,4 +299,3 @@ export function TaskDataTable({ tasks, onEditTask }: TaskDataTableProps) {
 function Card(props: React.HTMLAttributes<HTMLDivElement>) {
   return <div className="rounded-lg border bg-card text-card-foreground shadow-sm" {...props} />;
 }
-

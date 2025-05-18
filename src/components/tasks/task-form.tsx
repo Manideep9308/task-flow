@@ -1,6 +1,7 @@
+
 "use client";
 
-import type { Task, TaskPriority, TaskStatus, TaskFile } from '@/lib/types';
+import type { Task, TaskPriority, TaskStatus, TaskFile, User } from '@/lib/types';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -17,11 +18,12 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Paperclip, PlusCircle, Trash2, UploadCloud } from 'lucide-react';
+import { CalendarIcon, Paperclip, Trash2, UploadCloud, UserCircle } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { TASK_PRIORITIES, TASK_STATUSES, DEFAULT_CATEGORIES } from '@/lib/constants';
 import { useTasks } from '@/contexts/task-context';
+import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 
@@ -36,6 +38,7 @@ const taskFormSchema = z.object({
   }),
   dueDate: z.date().optional(),
   category: z.string().optional(),
+  assignedTo: z.string().optional(),
   files: z.array(z.object({
     id: z.string(),
     name: z.string(),
@@ -54,6 +57,7 @@ interface TaskFormProps {
 
 export function TaskForm({ task, onOpenChange }: TaskFormProps) {
   const { addTask, updateTask } = useTasks();
+  const { assignableUsers } = useAuth();
   const { toast } = useToast();
   const [currentFiles, setCurrentFiles] = useState<TaskFile[]>(task?.files || []);
 
@@ -66,6 +70,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
       priority: task?.priority || 'medium',
       dueDate: task?.dueDate ? parseISO(task.dueDate) : undefined,
       category: task?.category || '',
+      assignedTo: task?.assignedTo || '',
       files: task?.files || [],
     },
   });
@@ -79,6 +84,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
         priority: task.priority,
         dueDate: task.dueDate ? parseISO(task.dueDate) : undefined,
         category: task.category || '',
+        assignedTo: task.assignedTo || '',
         files: task.files || [],
       });
       setCurrentFiles(task.files || []);
@@ -90,6 +96,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
         priority: 'medium',
         dueDate: undefined,
         category: '',
+        assignedTo: '',
         files: [],
       });
       setCurrentFiles([]);
@@ -100,6 +107,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
     const taskData = {
       ...data,
       dueDate: data.dueDate ? format(data.dueDate, 'yyyy-MM-dd') : undefined,
+      assignedTo: data.assignedTo === '' ? undefined : data.assignedTo, // Store undefined if empty string
       files: currentFiles,
     };
 
@@ -110,18 +118,17 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
       addTask(taskData);
       toast({ title: "Task Created", description: `"${data.title}" has been added.` });
     }
-    onOpenChange?.(false); // Close dialog
+    onOpenChange?.(false); 
     form.reset();
     setCurrentFiles([]);
   };
 
   const handleFileAdd = () => {
-    // This is a mock file add. In a real app, this would open a file picker.
     const newFile: TaskFile = {
       id: `file-${Date.now()}`,
       name: `document-${currentFiles.length + 1}.pdf`,
       url: '#',
-      size: Math.floor(Math.random() * (2048 * 1024 - 100 * 1024 + 1)) + (100 * 1024), // Random size between 100KB and 2MB
+      size: Math.floor(Math.random() * (2048 * 1024 - 100 * 1024 + 1)) + (100 * 1024), 
       type: 'application/pdf',
     };
     setCurrentFiles(prev => [...prev, newFile]);
@@ -233,6 +240,30 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
             {DEFAULT_CATEGORIES.map(cat => <option key={cat} value={cat} />)}
           </datalist>
         </div>
+      </div>
+
+      <div>
+        <Label htmlFor="assignedTo">Assign to</Label>
+        <Controller
+            name="assignedTo"
+            control={form.control}
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                <SelectTrigger id="assignedTo" className="w-full">
+                  <div className="flex items-center gap-2">
+                    <UserCircle className="h-4 w-4 text-muted-foreground" />
+                    <SelectValue placeholder="Select user" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value=""><em>Unassigned</em></SelectItem>
+                  {assignableUsers.map(user => (
+                    <SelectItem key={user.id} value={user.id}>{user.name || user.email}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
       </div>
 
       <div>

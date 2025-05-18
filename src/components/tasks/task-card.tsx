@@ -1,17 +1,22 @@
+
 "use client";
 
-import type { Task, TaskPriority } from '@/lib/types';
+import type { Task, TaskPriority, User } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowUp, Minus, ArrowDown, CalendarDays, Paperclip } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getInitials } from '@/lib/utils';
 import { DraggableProvided } from 'react-beautiful-dnd'; // Placeholder type
+import { useAuth } from '@/contexts/auth-context'; // Import useAuth
 
 interface TaskCardProps {
   task: Task;
-  isDragging?: boolean; // For react-beautiful-dnd styling
-  provided?: DraggableProvided; // For react-beautiful-dnd props
+  isDragging?: boolean; 
+  provided?: DraggableProvided; 
   onClick?: () => void;
+  // assignableUsers prop is removed as we'll use context
 }
 
 const PriorityIcon = ({ priority }: { priority: TaskPriority }) => {
@@ -28,6 +33,9 @@ const PriorityIcon = ({ priority }: { priority: TaskPriority }) => {
 };
 
 export function TaskCard({ task, isDragging, provided, onClick }: TaskCardProps) {
+  const { assignableUsers } = useAuth(); // Get assignableUsers from context
+  const assignedUser = task.assignedTo ? assignableUsers.find(u => u.id === task.assignedTo) : null;
+
   const cardClasses = cn(
     "mb-4 shadow-md hover:shadow-lg transition-shadow duration-200 cursor-grab",
     isDragging ? "shadow-xl rotate-3" : "",
@@ -50,7 +58,24 @@ export function TaskCard({ task, isDragging, provided, onClick }: TaskCardProps)
     >
       <Card className={cardClasses}>
         <CardHeader className="p-4">
-          <CardTitle className="text-base font-semibold">{task.title}</CardTitle>
+          <div className="flex justify-between items-start">
+            <CardTitle className="text-base font-semibold flex-1">{task.title}</CardTitle>
+            {assignedUser && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Avatar className="h-7 w-7 text-xs ml-2 shrink-0">
+                      {/* <AvatarImage src={assignedUser.avatarUrl} alt={assignedUser.name} /> */}
+                      <AvatarFallback>{getInitials(assignedUser.name || assignedUser.email)}</AvatarFallback>
+                    </Avatar>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Assigned to: {assignedUser.name || assignedUser.email}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
           {task.category && (
             <Badge variant="outline" className="mt-1 text-xs w-fit">{task.category}</Badge>
           )}
@@ -83,6 +108,9 @@ export function TaskCard({ task, isDragging, provided, onClick }: TaskCardProps)
 
 // Fallback for when react-beautiful-dnd is not fully integrated or types are missing
 export function BasicTaskCard({ task, onClick }: Pick<TaskCardProps, 'task' | 'onClick'>) {
+  const { assignableUsers } = useAuth(); // Get assignableUsers from context
+  const assignedUser = task.assignedTo ? assignableUsers.find(u => u.id === task.assignedTo) : null;
+  
   const cardClasses = cn(
     "mb-4 shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer",
     {
@@ -101,7 +129,24 @@ export function BasicTaskCard({ task, onClick }: Pick<TaskCardProps, 'task' | 'o
     >
       <Card className={cardClasses}>
         <CardHeader className="p-4">
-          <CardTitle className="text-base font-semibold">{task.title}</CardTitle>
+          <div className="flex justify-between items-start">
+            <CardTitle className="text-base font-semibold flex-1">{task.title}</CardTitle>
+            {assignedUser && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Avatar className="h-7 w-7 text-xs ml-2 shrink-0">
+                      {/* <AvatarImage src={assignedUser.avatarUrl} alt={assignedUser.name} /> */}
+                      <AvatarFallback>{getInitials(assignedUser.name || assignedUser.email)}</AvatarFallback>
+                    </Avatar>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Assigned to: {assignedUser.name || assignedUser.email}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
           {task.category && (
             <Badge variant="outline" className="mt-1 text-xs w-fit">{task.category}</Badge>
           )}
@@ -131,4 +176,3 @@ export function BasicTaskCard({ task, onClick }: Pick<TaskCardProps, 'task' | 'o
     </div>
   );
 }
-

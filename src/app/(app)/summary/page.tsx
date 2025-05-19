@@ -1,13 +1,13 @@
 
 "use client";
 
-import { useState, useRef } from 'react'; // Added useRef
+import { useState, useRef } from 'react'; 
 import { useTasks } from '@/contexts/task-context';
 import { summarizeTasks, type SummarizeTasksInput, type SummarizeTasksOutput } from '@/ai/flows/summarize-tasks';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Wand2, Search, Download } from 'lucide-react'; // Added Download icon
+import { Loader2, Wand2, Search, Download } from 'lucide-react'; 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from '@/components/ui/separator';
 import jsPDF from 'jspdf';
@@ -16,18 +16,16 @@ import html2canvas from 'html2canvas';
 export default function SummaryPage() {
   const { tasks, isLoading: tasksLoading } = useTasks();
 
-  // State for general summary
   const [generalSummary, setGeneralSummary] = useState<string | null>(null);
   const [isGeneralSummaryLoading, setIsGeneralSummaryLoading] = useState(false);
   const [generalSummaryError, setGeneralSummaryError] = useState<string | null>(null);
-  const generalSummaryRef = useRef<HTMLDivElement>(null); // Ref for general summary content
+  const generalSummaryRef = useRef<HTMLDivElement>(null); 
 
-  // State for prompt-based summary
   const [promptText, setPromptText] = useState<string>("");
   const [promptBasedSummary, setPromptBasedSummary] = useState<string | null>(null);
   const [isPromptBasedSummaryLoading, setIsPromptBasedSummaryLoading] = useState(false);
   const [promptBasedSummaryError, setPromptBasedSummaryError] = useState<string | null>(null);
-  const promptSummaryRef = useRef<HTMLDivElement>(null); // Ref for prompt-based summary content
+  const promptSummaryRef = useRef<HTMLDivElement>(null); 
   const [currentPromptForTitle, setCurrentPromptForTitle] = useState<string>("");
 
 
@@ -40,9 +38,9 @@ export default function SummaryPage() {
 
     try {
       const canvas = await html2canvas(elementRef.current, {
-        scale: 2, // Increase scale for better resolution
-        useCORS: true, // If you have external images/fonts
-        backgroundColor: null, // Use element's background
+        scale: 2, 
+        useCORS: true, 
+        backgroundColor: null, 
       });
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
@@ -57,7 +55,7 @@ export default function SummaryPage() {
       const imgHeight = canvas.height;
       const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
       const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = 30; // Top margin
+      const imgY = 30; 
 
       pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
       pdf.save(`${fileNamePrefix}_summary_${new Date().toISOString().split('T')[0]}.pdf`);
@@ -98,7 +96,7 @@ export default function SummaryPage() {
       setPromptBasedSummary(null);
       return;
     }
-    setCurrentPromptForTitle(promptText); // Store the prompt for PDF filename
+    setCurrentPromptForTitle(promptText); 
     setIsPromptBasedSummaryLoading(true);
     setPromptBasedSummaryError(null);
     setPromptBasedSummary(null);
@@ -111,7 +109,7 @@ export default function SummaryPage() {
     );
 
     if (filteredTasks.length === 0) {
-      setPromptBasedSummaryError(`No tasks found matching "${promptText}".`);
+      setPromptBasedSummaryError(\`No tasks found matching "\${promptText}".\`);
       setIsPromptBasedSummaryLoading(false);
       return;
     }
@@ -138,7 +136,6 @@ export default function SummaryPage() {
 
   return (
     <div className="container mx-auto space-y-8 pt-0">
-      {/* Prompt-based Summary Section */}
       <Card className="max-w-3xl mx-auto shadow-xl mt-2 md:mt-6">
         <CardHeader>
           <CardTitle className="text-2xl font-bold flex items-center gap-2">
@@ -213,7 +210,6 @@ export default function SummaryPage() {
 
       <Separator />
 
-      {/* General Task Summary Section */}
       <Card className="max-w-3xl mx-auto shadow-xl">
         <CardHeader>
           <CardTitle className="text-2xl font-bold flex items-center gap-2">
@@ -303,5 +299,3 @@ export default function SummaryPage() {
     </div>
   );
 }
-
-    

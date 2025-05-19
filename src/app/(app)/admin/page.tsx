@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ShieldCheck, Users, Settings, UserCircle, Edit3, PaintBrush, AlertTriangle } from "lucide-react";
+import { ShieldCheck, Users, Settings, UserCircle, Edit3, Paintbrush, AlertTriangle } from "lucide-react"; // Corrected to Paintbrush
 import { useAuth } from "@/contexts/auth-context";
 import { getInitials } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { User, UserRole } from "@/lib/types";
-import { Switch } from "@/components/ui/switch"; // Import Switch
+import { Switch } from "@/components/ui/switch"; 
 
 const ROLES_AVAILABLE: { value: UserRole; label: string }[] = [
   { value: 'admin', label: 'Admin' },
@@ -133,7 +133,7 @@ export default function AdminPage() {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="mock-theme-select" className="flex items-center gap-1">
-                      <PaintBrush className="h-4 w-4" /> App Theme (Mock)
+                      <Paintbrush className="h-4 w-4" /> App Theme (Mock)
                     </Label>
                     <Select value={selectedMockTheme} onValueChange={setSelectedMockTheme}>
                       <SelectTrigger id="mock-theme-select">

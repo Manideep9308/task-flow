@@ -1,15 +1,17 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef } from 'react'; // Added useRef
 import { useTasks } from '@/contexts/task-context';
 import { summarizeTasks, type SummarizeTasksInput, type SummarizeTasksOutput } from '@/ai/flows/summarize-tasks';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Wand2, Search } from 'lucide-react';
+import { Loader2, Wand2, Search, Download } from 'lucide-react'; // Added Download icon
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from '@/components/ui/separator';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export default function SummaryPage() {
   const { tasks, isLoading: tasksLoading } = useTasks();
@@ -18,12 +20,53 @@ export default function SummaryPage() {
   const [generalSummary, setGeneralSummary] = useState<string | null>(null);
   const [isGeneralSummaryLoading, setIsGeneralSummaryLoading] = useState(false);
   const [generalSummaryError, setGeneralSummaryError] = useState<string | null>(null);
+  const generalSummaryRef = useRef<HTMLDivElement>(null); // Ref for general summary content
 
   // State for prompt-based summary
   const [promptText, setPromptText] = useState<string>("");
   const [promptBasedSummary, setPromptBasedSummary] = useState<string | null>(null);
   const [isPromptBasedSummaryLoading, setIsPromptBasedSummaryLoading] = useState(false);
   const [promptBasedSummaryError, setPromptBasedSummaryError] = useState<string | null>(null);
+  const promptSummaryRef = useRef<HTMLDivElement>(null); // Ref for prompt-based summary content
+  const [currentPromptForTitle, setCurrentPromptForTitle] = useState<string>("");
+
+
+  const handleDownloadPdf = async (elementRef: React.RefObject<HTMLDivElement>, fileNamePrefix: string) => {
+    if (!elementRef.current) {
+      console.error("PDF generation failed: Element not found.");
+      alert("Could not generate PDF: content not found.");
+      return;
+    }
+
+    try {
+      const canvas = await html2canvas(elementRef.current, {
+        scale: 2, // Increase scale for better resolution
+        useCORS: true, // If you have external images/fonts
+        backgroundColor: null, // Use element's background
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'pt',
+        format: 'a4',
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      const imgY = 30; // Top margin
+
+      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      pdf.save(`${fileNamePrefix}_summary_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("An error occurred while generating the PDF. Please try again.");
+    }
+  };
+
 
   const handleGenerateGeneralSummary = async () => {
     setIsGeneralSummaryLoading(true);
@@ -55,6 +98,7 @@ export default function SummaryPage() {
       setPromptBasedSummary(null);
       return;
     }
+    setCurrentPromptForTitle(promptText); // Store the prompt for PDF filename
     setIsPromptBasedSummaryLoading(true);
     setPromptBasedSummaryError(null);
     setPromptBasedSummary(null);
@@ -93,7 +137,7 @@ export default function SummaryPage() {
   };
 
   return (
-    <div className="container mx-auto space-y-8">
+    <div className="container mx-auto space-y-8 pt-0">
       {/* Prompt-based Summary Section */}
       <Card className="max-w-3xl mx-auto shadow-xl mt-2 md:mt-6">
         <CardHeader>
@@ -109,15 +153,15 @@ export default function SummaryPage() {
           <div className="flex gap-2">
             <Input 
               type="text"
-              placeholder="e.g., Marketing Campaign, Homepage UI, urgent bugfix"
+              placeholder="e.g., Marketing Campaign, Homepage UI"
               value={promptText}
               onChange={(e) => setPromptText(e.target.value)}
               className="flex-grow"
-              disabled={isPromptBasedSummaryLoading}
+              disabled={isPromptBasedSummaryLoading || isGeneralSummaryLoading}
             />
             <Button 
               onClick={handleGeneratePromptSummary} 
-              disabled={isPromptBasedSummaryLoading || !promptText.trim()}
+              disabled={isPromptBasedSummaryLoading || isGeneralSummaryLoading || !promptText.trim()}
             >
               {isPromptBasedSummaryLoading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -144,8 +188,19 @@ export default function SummaryPage() {
 
           {promptBasedSummary && !isPromptBasedSummaryLoading && !promptBasedSummaryError && (
             <div className="p-4 border rounded-lg bg-card shadow mt-4">
-              <h3 className="text-lg font-semibold mb-2 text-primary">Summary for "{promptText}":</h3>
-              <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-semibold text-primary">Summary for "{currentPromptForTitle}":</h3>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleDownloadPdf(promptSummaryRef, currentPromptForTitle.replace(/\s+/g, '_'))}
+                  disabled={!promptBasedSummary}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download PDF
+                </Button>
+              </div>
+              <div ref={promptSummaryRef} className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap p-2">
                 {promptBasedSummary}
               </div>
             </div>
@@ -187,8 +242,19 @@ export default function SummaryPage() {
 
           {generalSummary && !isGeneralSummaryLoading && !generalSummaryError && (
             <div className="p-4 border rounded-lg bg-card shadow">
-              <h3 className="text-xl font-semibold mb-3 text-primary">Overall Task Summary:</h3>
-              <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+               <div className="flex justify-between items-center mb-2">
+                <h3 className="text-xl font-semibold text-primary">Overall Task Summary:</h3>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleDownloadPdf(generalSummaryRef, 'overall_tasks')}
+                  disabled={!generalSummary}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download PDF
+                </Button>
+              </div>
+              <div ref={generalSummaryRef} className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap p-2">
                 {generalSummary}
               </div>
             </div>
@@ -216,7 +282,7 @@ export default function SummaryPage() {
         <CardFooter>
           <Button 
             onClick={handleGenerateGeneralSummary} 
-            disabled={isGeneralSummaryLoading || tasks.length === 0 || tasksLoading}
+            disabled={isGeneralSummaryLoading || isPromptBasedSummaryLoading || tasks.length === 0 || tasksLoading}
             className="w-full text-lg py-6"
             size="lg"
           >
@@ -237,3 +303,5 @@ export default function SummaryPage() {
     </div>
   );
 }
+
+    

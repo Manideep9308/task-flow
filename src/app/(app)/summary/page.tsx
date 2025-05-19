@@ -109,7 +109,7 @@ export default function SummaryPage() {
     );
 
     if (filteredTasks.length === 0) {
-      setPromptBasedSummaryError(\`No tasks found matching "\${promptText}".\`);
+      setPromptBasedSummaryError('No tasks found matching "' + promptText + '".');
       setIsPromptBasedSummaryLoading(false);
       return;
     }

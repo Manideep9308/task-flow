@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ShieldCheck, Users, Settings, UserCircle, Edit3 } from "lucide-react";
+import { ShieldCheck, Users, Settings, UserCircle, Edit3, PaintBrush, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { getInitials } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +17,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
@@ -28,10 +27,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { User, UserRole } from "@/lib/types";
+import { Switch } from "@/components/ui/switch"; // Import Switch
 
 const ROLES_AVAILABLE: { value: UserRole; label: string }[] = [
   { value: 'admin', label: 'Admin' },
   { value: 'member', label: 'Member' },
+];
+
+const MOCK_THEMES = [
+  { value: 'neon', label: 'Neon (Current)' },
+  { value: 'light', label: 'Light Mode' },
+  { value: 'dark', label: 'Dark Mode' },
 ];
 
 export default function AdminPage() {
@@ -39,6 +45,10 @@ export default function AdminPage() {
   const [isEditRoleDialogOpen, setIsEditRoleDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [selectedRole, setSelectedRole] = useState<UserRole | undefined>(undefined);
+
+  // State for mock application settings
+  const [selectedMockTheme, setSelectedMockTheme] = useState<string>('neon');
+  const [isMaintenanceModeEnabled, setIsMaintenanceModeEnabled] = useState(false);
 
   const handleOpenEditRoleDialog = (user: User) => {
     setEditingUser(user);
@@ -120,11 +130,37 @@ export default function AdminPage() {
                   </CardTitle>
                   <CardDescription>Configure global application parameters.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Placeholder for application settings. (e.g., theme, notifications, API keys).
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="mock-theme-select" className="flex items-center gap-1">
+                      <PaintBrush className="h-4 w-4" /> App Theme (Mock)
+                    </Label>
+                    <Select value={selectedMockTheme} onValueChange={setSelectedMockTheme}>
+                      <SelectTrigger id="mock-theme-select">
+                        <SelectValue placeholder="Select theme" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MOCK_THEMES.map(themeOpt => (
+                          <SelectItem key={themeOpt.value} value={themeOpt.value}>
+                            {themeOpt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center justify-between space-x-2 pt-2">
+                    <Label htmlFor="maintenance-mode-switch" className="flex items-center gap-1">
+                      <AlertTriangle className="h-4 w-4" /> Enable Maintenance (Mock)
+                    </Label>
+                    <Switch 
+                      id="maintenance-mode-switch" 
+                      checked={isMaintenanceModeEnabled}
+                      onCheckedChange={setIsMaintenanceModeEnabled}
+                    />
+                  </div>
+                   <p className="text-xs text-muted-foreground pt-2">
+                    These settings are for demonstration and do not persist or affect the actual application.
                   </p>
-                  <Button variant="outline" className="mt-3 w-full" disabled>Configure Settings</Button>
                 </CardContent>
               </Card>
 
@@ -138,7 +174,7 @@ export default function AdminPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    Role changes here are part of a mock setup and only persist for the current session.
+                    Role changes for individual users are handled in "User Overview". Advanced role/permission definition is a backend feature.
                   </p>
                   <Button variant="outline" className="mt-3 w-full" disabled>Advanced Role Management</Button>
                 </CardContent>

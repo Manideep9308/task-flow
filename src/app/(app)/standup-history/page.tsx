@@ -26,8 +26,8 @@ export default function StandupHistoryPage() {
   const [generationError, setGenerationError] = useState<string | null>(null);
 
   // Helper function to format summary text
-  const formatSummaryTextForDisplay = (text: string): string => {
-    if (!text) return "";
+  const formatSummaryTextForDisplay = (text: string | undefined | null): string => {
+    if (!text) return ""; // Handle undefined or null text
     return text
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
       .replace(/\n/g, '<br />'); // Newlines
@@ -160,9 +160,8 @@ export default function StandupHistoryPage() {
             )}
           </CardHeader>
           <CardContent>
-            {/* Using dangerouslySetInnerHTML to render formatted summary */}
             <div 
-              className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap"
+              className="prose prose-sm dark:prose-invert max-w-none"
               dangerouslySetInnerHTML={{ __html: formatSummaryTextForDisplay(todaysSummary.summaryText) }} 
             />
           </CardContent>
@@ -201,9 +200,8 @@ export default function StandupHistoryPage() {
                   )}
                 </CardHeader>
                 <CardContent>
-                  {/* Using dangerouslySetInnerHTML to render formatted summary */}
                   <div 
-                    className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap"
+                    className="prose prose-sm dark:prose-invert max-w-none"
                     dangerouslySetInnerHTML={{ __html: formatSummaryTextForDisplay(summary.summaryText) }} 
                   />
                 </CardContent>
@@ -215,5 +213,3 @@ export default function StandupHistoryPage() {
     </div>
   );
 }
-
-    

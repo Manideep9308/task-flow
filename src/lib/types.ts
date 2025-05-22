@@ -100,3 +100,20 @@ export interface ChatMessage {
   text: string;
   timestamp: string; // ISO string
 }
+
+// For AI Chat Replies
+export interface SuggestChatRepliesInput {
+  recentMessages: ChatMessage[];
+  currentUser: User; // To help AI tailor suggestions if needed
+}
+export interface SuggestChatRepliesOutput {
+  suggestedReplies: string[];
+}
+
+// For AI Chat Highlights
+export interface GenerateChatHighlightsInput {
+  messages: ChatMessage[];
+}
+export interface GenerateChatHighlightsOutput {
+  highlights: string;
+}

@@ -9,16 +9,30 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Send, MessagesSquare } from 'lucide-react';
+import { Send, MessagesSquare, Wand2, Loader2, Info, Sparkles } from 'lucide-react'; // Added Wand2, Loader2, Info
 import { v4 as uuidv4 } from 'uuid';
 import { format, parseISO } from 'date-fns';
 import { cn, getInitials } from '@/lib/utils';
+import { suggestChatReplies, type SuggestChatRepliesInput, type SuggestChatRepliesOutput } from '@/ai/flows/suggest-chat-replies-flow';
+import { generateChatHighlights, type GenerateChatHighlightsInput, type GenerateChatHighlightsOutput } from '@/ai/flows/generate-chat-highlights-flow';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
+
 
 export default function TeamChatPage() {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessageText, setNewMessageText] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  const [suggestedReplies, setSuggestedReplies] = useState<string[]>([]);
+  const [isLoadingReplies, setIsLoadingReplies] = useState(false);
+
+  const [chatHighlights, setChatHighlights] = useState<string | null>(null);
+  const [isLoadingHighlights, setIsLoadingHighlights] = useState(false);
+  const [highlightsError, setHighlightsError] = useState<string | null>(null);
+  const { toast } = useToast();
+
 
   const handleSendMessage = () => {
     if (!newMessageText.trim() || !user) return;
@@ -33,6 +47,7 @@ export default function TeamChatPage() {
 
     setMessages(prevMessages => [...prevMessages, newMessage]);
     setNewMessageText('');
+    setSuggestedReplies([]); // Clear suggestions after sending a message
   };
 
   useEffect(() => {
@@ -43,22 +58,110 @@ export default function TeamChatPage() {
         scrollViewport.scrollTop = scrollViewport.scrollHeight;
       }
     }
-  }, [messages]);
+
+    // Fetch smart replies
+    const fetchReplies = async () => {
+      if (messages.length > 0 && user) {
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage.userId !== user.id) { // Only suggest if current user isn't the last sender
+          setIsLoadingReplies(true);
+          setSuggestedReplies([]);
+          try {
+            const input: SuggestChatRepliesInput = {
+              recentMessages: messages.slice(-3), // Send last 3 messages
+              currentUser: user,
+            };
+            const result: SuggestChatRepliesOutput = await suggestChatReplies(input);
+            setSuggestedReplies(result.suggestedReplies.filter(reply => reply.trim() !== ""));
+          } catch (error) {
+            console.error("Error fetching smart replies:", error);
+            setSuggestedReplies([]); // Clear on error
+          } finally {
+            setIsLoadingReplies(false);
+          }
+        } else {
+           setSuggestedReplies([]); // Clear if current user sent the last message
+        }
+      }
+    };
+    fetchReplies();
+  }, [messages, user]);
+
+  const handleGenerateHighlights = async () => {
+    if (!messages || messages.length === 0) {
+      toast({
+        title: "No Messages",
+        description: "There are no messages in the chat to generate highlights from.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsLoadingHighlights(true);
+    setChatHighlights(null);
+    setHighlightsError(null);
+    try {
+      const input: GenerateChatHighlightsInput = { messages };
+      const result: GenerateChatHighlightsOutput = await generateChatHighlights(input);
+      setChatHighlights(result.highlights);
+      // Display highlights in an alert or toast
+      // For simplicity, we'll use an Alert component state for this demo
+    } catch (error) {
+      console.error("Error generating chat highlights:", error);
+      setHighlightsError(error instanceof Error ? error.message : "Failed to generate highlights.");
+      setChatHighlights(null);
+    } finally {
+      setIsLoadingHighlights(false);
+    }
+  };
+
 
   return (
     <div className="container mx-auto pt-0 h-full flex flex-col">
       <Card className="shadow-xl mt-2 md:mt-6 flex-1 flex flex-col">
         <CardHeader>
-          <div className="flex items-center gap-3">
-            <MessagesSquare className="h-8 w-8 text-primary" />
-            <div>
-              <CardTitle className="text-3xl font-bold">Team Chat</CardTitle>
-              <CardDescription className="text-md">
-                General discussion and announcements.
-              </CardDescription>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div className="flex items-center gap-3">
+              <MessagesSquare className="h-8 w-8 text-primary" />
+              <div>
+                <CardTitle className="text-3xl font-bold">Team Chat</CardTitle>
+                <CardDescription className="text-md">
+                  General discussion and AI-assisted interactions.
+                </CardDescription>
+              </div>
             </div>
+            <Button onClick={handleGenerateHighlights} variant="outline" size="sm" disabled={isLoadingHighlights || messages.length === 0}>
+              {isLoadingHighlights ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Wand2 className="mr-2 h-4 w-4" />
+              )}
+              Generate Highlights
+            </Button>
           </div>
         </CardHeader>
+        
+        {chatHighlights && !isLoadingHighlights && (
+          <div className="p-4 border-b">
+            <Alert>
+              <Sparkles className="h-4 w-4" />
+              <AlertTitle>Chat Highlights</AlertTitle>
+              <AlertDescription className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+                {chatHighlights}
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
+        {highlightsError && !isLoadingHighlights && (
+          <div className="p-4 border-b">
+            <Alert variant="destructive">
+              <Info className="h-4 w-4" />
+              <AlertTitle>Error Generating Highlights</AlertTitle>
+              <AlertDescription>{highlightsError}</AlertDescription>
+            </Alert>
+          </div>
+        )}
+
+
         <CardContent className="flex-1 overflow-hidden p-0">
           <ScrollArea className="h-full p-4" ref={scrollAreaRef}>
             <div className="space-y-4">
@@ -113,7 +216,31 @@ export default function TeamChatPage() {
             </div>
           </ScrollArea>
         </CardContent>
-        <CardFooter className="p-4 border-t">
+        <CardFooter className="p-4 border-t flex flex-col items-start gap-2">
+          {isLoadingReplies && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground self-center">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              <span>Suggesting replies...</span>
+            </div>
+          )}
+          {suggestedReplies.length > 0 && !isLoadingReplies && (
+            <div className="flex flex-wrap gap-2 mb-2 self-center">
+              {suggestedReplies.map((reply, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => {
+                    setNewMessageText(reply);
+                    setSuggestedReplies([]); // Clear suggestions once one is clicked
+                  }}
+                >
+                  {reply}
+                </Button>
+              ))}
+            </div>
+          )}
           <div className="flex w-full items-center gap-2">
             <Input
               type="text"

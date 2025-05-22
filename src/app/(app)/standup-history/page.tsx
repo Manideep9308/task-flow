@@ -7,15 +7,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Loader2, MessageSquareText, CalendarDays, Wand2, AlertTriangle } from "lucide-react";
 import { format, parseISO } from 'date-fns';
-import { mockStandupSummaries } from "@/lib/mock-data"; // Using mock data
+import { mockStandupSummaries } from "@/lib/mock-data"; 
 import type { StandupSummary, StandupReportItem, Task } from "@/lib/types";
 import { generateStandupSummary, type GenerateStandupSummaryInput } from "@/ai/flows/generate-standup-summary-flow";
 import { useTasks } from "@/contexts/task-context";
 import { useAuth } from "@/contexts/auth-context";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-
-// In a real app, you'd fetch this from a backend or context
-const historicalStandupSummaries: StandupSummary[] = mockStandupSummaries;
 
 export default function StandupHistoryPage() {
   const { tasks } = useTasks();
@@ -25,18 +22,22 @@ export default function StandupHistoryPage() {
   const [isGeneratingTodaysSummary, setIsGeneratingTodaysSummary] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
 
-  // Helper function to format summary text
+  // Convert historicalStandupSummaries to state and sort them initially
+  const [displayedHistoricalSummaries, setDisplayedHistoricalSummaries] = useState<StandupSummary[]>(() => 
+    [...mockStandupSummaries].sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime())
+  );
+
   const formatSummaryTextForDisplay = (text: string | undefined | null): string => {
-    if (!text) return ""; // Handle undefined or null text
+    if (!text) return "";
     return text
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
-      .replace(/\n/g, '<br />'); // Newlines
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
+      .replace(/\n/g, '<br />'); 
   };
 
   const handleGenerateTodaysMockSummary = async () => {
     setIsGeneratingTodaysSummary(true);
     setGenerationError(null);
-    setTodaysSummary(null);
+    setTodaysSummary(null); // Clear previous "today's summary" if any
 
     const mockReports: StandupReportItem[] = [];
     const usersToReport = assignableUsers.slice(0, 3); 
@@ -48,7 +49,11 @@ export default function StandupHistoryPage() {
       let blockers = "";
 
       if (userTasks.length > 0) {
-        const recentTask = userTasks.sort((a,b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0];
+        const recentTask = userTasks.sort((a,b) => {
+            const dateA = a.updatedAt ? parseISO(a.updatedAt).getTime() : 0;
+            const dateB = b.updatedAt ? parseISO(b.updatedAt).getTime() : 0;
+            return dateB - dateA;
+        })[0];
         didYesterday = `Focused on "${recentTask.title}".`;
         doingToday = `Will continue working on "${recentTask.title}" and other assignments.`;
         if (recentTask.status === 'inprogress' && Math.random() > 0.7) { 
@@ -86,12 +91,16 @@ export default function StandupHistoryPage() {
 
     try {
       const result = await generateStandupSummary(input);
-      setTodaysSummary({
-        id: `today-${Date.now()}`,
+      const newSummary: StandupSummary = {
+        id: `today-${Date.now()}`, // Unique ID for React key
         date: input.summaryDate!,
         summaryText: result.consolidatedSummary,
         projectId: input.projectName,
-      });
+      };
+      setTodaysSummary(newSummary); // Set for prominent display
+      setDisplayedHistoricalSummaries(prevSummaries => 
+        [newSummary, ...prevSummaries].sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime())
+      ); // Add to historical list and re-sort
     } catch (e) {
       console.error("Error generating today's summary:", e);
       setGenerationError(e instanceof Error ? e.message : "Failed to generate summary.");
@@ -169,7 +178,7 @@ export default function StandupHistoryPage() {
       )}
       
       <CardTitle className="text-2xl mb-4 mt-8">Historical Summaries</CardTitle>
-      {historicalStandupSummaries.length === 0 ? (
+      {displayedHistoricalSummaries.length === 0 ? (
         <Card>
           <CardHeader>
             <CardTitle>No Historical Summaries Yet</CardTitle>
@@ -181,9 +190,10 @@ export default function StandupHistoryPage() {
           </CardContent>
         </Card>
       ) : (
-        <ScrollArea className="h-[calc(100vh-26rem)]"> 
+        <ScrollArea className="h-[calc(100vh-30rem)]"> {/* Adjusted height slightly */}
           <div className="space-y-6">
-            {historicalStandupSummaries.sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()).map((summary) => (
+            {/* Display the state `displayedHistoricalSummaries` which includes newly generated ones */}
+            {displayedHistoricalSummaries.map((summary) => (
               <Card key={summary.id} className="shadow-md hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex justify-between items-center">

@@ -23,14 +23,14 @@ const ProjectTaskSnapshotSchema = z.object({
   category: z.string().optional(),
 });
 
-export const GenerateProjectHealthReportInputSchema = z.object({
+const GenerateProjectHealthReportInputSchema = z.object({
   tasks: z.array(ProjectTaskSnapshotSchema).describe("A list of all current tasks for the project."),
   projectName: z.string().optional().describe("The name of the project."),
   reportDate: z.string().optional().describe("The date for which the report is being generated (YYYY-MM-DD)."),
 });
 export type GenerateProjectHealthReportInput = z.infer<typeof GenerateProjectHealthReportInputSchema>;
 
-export const GenerateProjectHealthReportOutputSchema = z.object({
+const GenerateProjectHealthReportOutputSchema = z.object({
   overallSummary: z.string().describe("A concise high-level summary of the project's current status."),
   riskAssessment: z.string().describe("An analysis of potential risks, including overdue tasks, tasks nearing deadlines, high-priority task pile-ups, or potential bottlenecks based on task distribution."),
   keyHighlights: z.string().describe("Notable achievements, recently completed critical tasks, or positive trends."),

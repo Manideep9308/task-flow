@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Wand2, AlertTriangle, FileText, BarChart3, Zap, Lightbulb, AlertOctagon, Trophy, CheckCircle } from "lucide-react";
+import { Loader2, Wand2, AlertTriangle, FileText, BarChart3, Zap, Lightbulb, AlertOctagon, Trophy, CheckCircle, Target } from "lucide-react"; // Added Target
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useTasks } from "@/contexts/task-context";
 import type { ProjectTaskSnapshot, GenerateProjectHealthReportOutput, GenerateProjectHealthReportInput } from "@/lib/types";
@@ -55,12 +55,14 @@ export default function ReportsPage() {
     if (!text) return null;
     // Simple formatting: replace newlines with <br /> for display
     // More complex markdown could be handled here if needed
-    return text.split('\n').map((line, index, array) => (
-      <span key={index}>
-        {line}
-        {index < array.length - 1 && <br />}
-      </span>
-    ));
+    return text.split('\\n').map((line, index, array) => ( // Handle escaped newlines from AI
+      line.split('\n').map((subLine, subIndex, subArray) => ( // Handle actual newlines
+        <span key={`${index}-${subIndex}`}>
+          {subLine}
+          {(subIndex < subArray.length - 1 || index < array.length - 1) && <br />}
+        </span>
+      ))
+    )).flat();
   };
 
 
@@ -174,7 +176,18 @@ export default function ReportsPage() {
                         </h4>
                         <p className="text-muted-foreground prose prose-sm dark:prose-invert max-w-none">{renderFormattedText(report.blockersAndChallenges)}</p>
                     </div>
-                    <Separator/>
+                     <Separator/>
+                    {report.keyFocusAreas && (
+                        <>
+                            <div className="p-3 rounded-md bg-muted/30">
+                                <h4 className="font-semibold text-lg flex items-center gap-2 mb-1">
+                                    <Target className="h-5 w-5 text-red-500/90"/> Key Focus Areas
+                                </h4>
+                                <p className="text-muted-foreground prose prose-sm dark:prose-invert max-w-none">{renderFormattedText(report.keyFocusAreas)}</p>
+                            </div>
+                            <Separator/>
+                        </>
+                    )}
                     <div className="p-3 rounded-md bg-muted/30">
                         <h4 className="font-semibold text-lg flex items-center gap-2 mb-1">
                            <Lightbulb className="h-5 w-5 text-green-500/80"/> Actionable Recommendations

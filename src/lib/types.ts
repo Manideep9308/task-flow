@@ -142,7 +142,9 @@ export interface ProjectHealthReport {
   keyHighlights: string; // Positive developments, completed milestones
   blockersAndChallenges: string;
   actionableRecommendations: string;
+  keyFocusAreas?: string; // New field for targeted focus points
   reportDate?: string;
   projectName?: string;
 }
 export type GenerateProjectHealthReportOutput = ProjectHealthReport;
+

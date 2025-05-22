@@ -36,6 +36,7 @@ const GenerateProjectHealthReportOutputSchema = z.object({
   keyHighlights: z.string().describe("Notable achievements, recently completed critical tasks, or positive trends."),
   blockersAndChallenges: z.string().describe("Identified blockers, challenges, or areas where the project might be struggling."),
   actionableRecommendations: z.string().describe("Specific, actionable recommendations to improve project health, address risks, or tackle challenges."),
+  keyFocusAreas: z.string().optional().describe("A concise, bulleted list of 2-3 specific tasks or areas that require immediate attention or focus based on the analysis."),
   reportDate: z.string().optional().describe("The report generation date."),
   projectName: z.string().optional().describe("The name of the project reported on."),
 });
@@ -81,6 +82,7 @@ Please structure your report with the following sections:
 3.  **Key Highlights**: What are the recent positive developments or achievements? (e.g., critical tasks recently moved to 'done', good progress in a particular category).
 4.  **Blockers & Challenges**: What are the main impediments or areas where the project seems to be facing difficulties? (e.g., tasks stuck in 'inprogress' for long, multiple high-priority items not started).
 5.  **Actionable Recommendations**: Provide 2-3 specific, actionable suggestions to improve project health, address risks, or overcome challenges.
+6.  **Key Focus Areas**: Based on your entire analysis, identify and list (bullet points preferred) 2-3 specific tasks or thematic areas that require the most immediate attention or focus to improve project health. Be concise and direct.
 
 Be thorough and insightful. Use the provided task data to back up your analysis in each section.
 The 'Assigned To' field contains user IDs; you can mention if many tasks point to the same ID as a potential concern without knowing the user's name.
@@ -101,6 +103,7 @@ const generateProjectHealthReportFlow = ai.defineFlow(
         keyHighlights: "N/A",
         blockersAndChallenges: "N/A",
         actionableRecommendations: "N/A",
+        keyFocusAreas: "N/A",
         reportDate: input.reportDate,
         projectName: input.projectName,
       };

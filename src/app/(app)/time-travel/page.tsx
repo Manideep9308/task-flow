@@ -58,11 +58,11 @@ export default function TimeTravelPage() {
   const getRiskBadgeVariant = (riskLevel: string | undefined) => {
     switch (riskLevel?.toLowerCase()) {
       case 'low':
-        return 'default'; // Default often green-ish or primary
+        return 'default'; 
       case 'medium':
-        return 'secondary'; // Secondary often yellow/orange-ish
+        return 'secondary'; 
       case 'high':
-        return 'destructive'; // Destructive is red
+        return 'destructive'; 
       default:
         return 'outline';
     }

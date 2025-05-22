@@ -18,8 +18,8 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Paperclip, Trash2, UploadCloud, UserCircle, Wand2, Loader2, Brain } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { CalendarIcon, Paperclip, Trash2, UploadCloud, UserCircle, Wand2, Loader2, Brain, Sparkles } from 'lucide-react'; // Added Sparkles
+import { format, parseISO, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { TASK_PRIORITIES, TASK_STATUSES, DEFAULT_CATEGORIES } from '@/lib/constants';
 import { useTasks } from '@/contexts/task-context';
@@ -28,6 +28,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { suggestTaskDetails } from '@/ai/flows/suggest-task-details-flow';
 import { suggestSubtasks } from '@/ai/flows/suggest-subtasks-flow';
+import { suggestTaskPriority } from '@/ai/flows/suggest-task-priority-flow'; // Added import
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -71,6 +72,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
   const { toast } = useToast();
   const [currentFiles, setCurrentFiles] = useState<TaskFile[]>(task?.files || []);
   const [isSuggestingDetails, setIsSuggestingDetails] = useState(false);
+  const [isSuggestingPriority, setIsSuggestingPriority] = useState(false); // New state
 
   const [suggestedSubtasksList, setSuggestedSubtasksList] = useState<string[]>([]);
   const [isSuggestingSubtasks, setIsSuggestingSubtasks] = useState(false);
@@ -84,7 +86,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
       description: task?.description || '',
       status: task?.status || 'todo',
       priority: task?.priority || 'medium',
-      dueDate: task?.dueDate ? parseISO(task.dueDate) : undefined,
+      dueDate: task?.dueDate && isValid(parseISO(task.dueDate)) ? parseISO(task.dueDate) : undefined,
       category: task?.category || '',
       assignedTo: task?.assignedTo || UNASSIGNED_FORM_VALUE,
       files: task?.files || [],
@@ -98,7 +100,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
         description: task.description || '',
         status: task.status,
         priority: task.priority,
-        dueDate: task.dueDate ? parseISO(task.dueDate) : undefined,
+        dueDate: task.dueDate && isValid(parseISO(task.dueDate)) ? parseISO(task.dueDate) : undefined,
         category: task.category || '',
         assignedTo: task.assignedTo || UNASSIGNED_FORM_VALUE,
         files: task.files || [],
@@ -144,19 +146,71 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
       form.setValue('priority', suggestions.suggestedPriority, { shouldValidate: true });
       toast({
         title: 'AI Suggestions Applied',
-        description: 'Description, category, and priority have been updated.',
+        description: 'Description, category, and priority have been updated by AI.',
       });
     } catch (error) {
       console.error('Error suggesting task details:', error);
       toast({
         variant: 'destructive',
         title: 'Suggestion Failed',
-        description: error instanceof Error ? error.message : 'Could not get AI suggestions.',
+        description: error instanceof Error ? error.message : 'Could not get AI suggestions for details.',
       });
     } finally {
       setIsSuggestingDetails(false);
     }
   };
+
+  const handleSuggestPriority = async () => {
+    const title = form.getValues('title');
+    const description = form.getValues('description');
+    const currentPriority = form.getValues('priority');
+    const dueDateValue = form.getValues('dueDate');
+    const dueDate = dueDateValue ? format(dueDateValue, 'yyyy-MM-dd') : undefined;
+
+    if (!title.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Title Required',
+        description: 'Please enter a task title before suggesting priority.',
+      });
+      return;
+    }
+    setIsSuggestingPriority(true);
+    try {
+      const suggestion = await suggestTaskPriority({ title, taskDescription: description, currentPriority, dueDate });
+      toast({
+        title: 'AI Priority Suggestion',
+        description: (
+          <div>
+            <p>Suggested Priority: <strong className="capitalize">{suggestion.suggestedPriority}</strong></p>
+            <p>Reasoning: {suggestion.reasoning}</p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="mt-2"
+              onClick={() => {
+                form.setValue('priority', suggestion.suggestedPriority, { shouldValidate: true });
+                toast({ title: 'Priority Updated', description: `Task priority set to ${suggestion.suggestedPriority}.`});
+              }}
+            >
+              Apply Suggested Priority
+            </Button>
+          </div>
+        ),
+        duration: 10000, // Keep toast longer for interaction
+      });
+    } catch (error) {
+      console.error('Error suggesting task priority:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Priority Suggestion Failed',
+        description: error instanceof Error ? error.message : 'Could not get AI priority suggestion.',
+      });
+    } finally {
+      setIsSuggestingPriority(false);
+    }
+  };
+
 
   const handleSuggestSubtasks = async () => {
     const taskTitle = form.getValues('title');
@@ -253,7 +307,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
                 variant="outline"
                 size="sm"
                 onClick={handleSuggestDetails}
-                disabled={isSuggestingDetails || !form.watch('title')}
+                disabled={isSuggestingDetails || !form.watch('title') || isSuggestingPriority}
                 className="text-xs flex-1"
               >
                 {isSuggestingDetails ? (
@@ -264,6 +318,62 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
                 AI Suggest Details
               </Button>
           </div>
+
+          <Separator />
+           <Card className="bg-muted/20 shadow-inner">
+            <CardHeader className="pb-2 pt-4 px-4">
+              <UiCardTitle className="text-lg font-semibold flex items-center gap-2">
+                <Brain className="h-5 w-5 text-primary" />
+                AI Task Breakdown
+              </UiCardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4 space-y-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleSuggestSubtasks}
+                disabled={isSuggestingSubtasks || !form.watch('title') || isSuggestingDetails || isSuggestingPriority}
+                className="w-full text-xs"
+              >
+                {isSuggestingSubtasks ? (
+                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                ) : (
+                  <Brain className="mr-1 h-3 w-3" />
+                )}
+                Suggest Sub-tasks / Checklist
+              </Button>
+              {isSuggestingSubtasks && (
+                <div className="flex items-center space-x-2 text-sm text-muted-foreground p-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Generating sub-task suggestions...</span>
+                </div>
+              )}
+              {subtasksError && !isSuggestingSubtasks && (
+                <Alert variant="destructive" className="my-2">
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{subtasksError}</AlertDescription>
+                </Alert>
+              )}
+              {suggestedSubtasksList.length > 0 && !isSuggestingSubtasks && !subtasksError && (
+                <div className="mt-2 p-3 border rounded-md bg-background/50 text-sm">
+                  <p className="font-medium mb-1.5 text-muted-foreground">Suggested Sub-tasks/Checklist:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    {suggestedSubtasksList.map((subtask, index) => (
+                      <li key={index}>{subtask}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {!isSuggestingSubtasks && !subtasksError && suggestedSubtasksList.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-2">
+                  Enter a title and click "Suggest Sub-tasks" for AI-powered breakdown.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+          <Separator />
+
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -287,22 +397,39 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
             </div>
             <div>
               <Label htmlFor="priority">Priority</Label>
-              <Controller
-                name="priority"
-                control={form.control}
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger id="priority">
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TASK_PRIORITIES.map(p => (
-                        <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+              <div className="flex items-center gap-2">
+                <Controller
+                  name="priority"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger id="priority" className="flex-grow">
+                        <SelectValue placeholder="Select priority" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TASK_PRIORITIES.map(p => (
+                          <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handleSuggestPriority}
+                    disabled={isSuggestingPriority || !form.watch('title') || isSuggestingDetails}
+                    title="AI Suggest Priority"
+                    className="p-2"
+                  >
+                    {isSuggestingPriority ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4" />
+                    )}
+                  </Button>
+              </div>
             </div>
           </div>
           
@@ -407,62 +534,6 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
               </Button>
             </div>
           </div>
-          
-          <Separator className="my-6" />
-
-          <Card className="bg-muted/20 shadow-inner">
-            <CardHeader className="pb-2 pt-4 px-4">
-              <UiCardTitle className="text-lg font-semibold flex items-center gap-2">
-                <Brain className="h-5 w-5 text-primary" />
-                AI Task Breakdown
-              </UiCardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-4 space-y-3">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleSuggestSubtasks}
-                disabled={isSuggestingSubtasks || !form.watch('title')}
-                className="w-full text-xs"
-              >
-                {isSuggestingSubtasks ? (
-                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                ) : (
-                  <Brain className="mr-1 h-3 w-3" />
-                )}
-                Suggest Sub-tasks / Checklist
-              </Button>
-              {isSuggestingSubtasks && (
-                <div className="flex items-center space-x-2 text-sm text-muted-foreground p-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Generating sub-task suggestions...</span>
-                </div>
-              )}
-              {subtasksError && !isSuggestingSubtasks && (
-                <Alert variant="destructive" className="my-2">
-                  <AlertTitle>Error</AlertTitle>
-                  <AlertDescription>{subtasksError}</AlertDescription>
-                </Alert>
-              )}
-              {suggestedSubtasksList.length > 0 && !isSuggestingSubtasks && !subtasksError && (
-                <div className="mt-2 p-3 border rounded-md bg-background/50 text-sm">
-                  <p className="font-medium mb-1.5 text-muted-foreground">Suggested Sub-tasks/Checklist:</p>
-                  <ul className="list-disc list-inside space-y-1">
-                    {suggestedSubtasksList.map((subtask, index) => (
-                      <li key={index}>{subtask}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {!isSuggestingSubtasks && !subtasksError && suggestedSubtasksList.length === 0 && (
-                <p className="text-xs text-muted-foreground text-center py-2">
-                  Enter a title and click "Suggest Sub-tasks" for AI-powered breakdown.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
         </div>
       </ScrollArea>
 
@@ -470,7 +541,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
         <Button type="button" variant="outline" onClick={() => onOpenChange?.(false)}>
           Cancel
         </Button>
-        <Button type="submit" disabled={form.formState.isSubmitting || isSuggestingDetails || isSuggestingSubtasks}>
+        <Button type="submit" disabled={form.formState.isSubmitting || isSuggestingDetails || isSuggestingSubtasks || isSuggestingPriority}>
           {form.formState.isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -482,3 +553,4 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
     </form>
   );
 }
+

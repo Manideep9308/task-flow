@@ -25,6 +25,13 @@ export default function StandupHistoryPage() {
   const [isGeneratingTodaysSummary, setIsGeneratingTodaysSummary] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
 
+  const formatSummaryTextForDisplay = (text: string): string => {
+    if (!text) return "";
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+      .replace(/\n/g, '<br />'); // Newlines
+  };
+
   const handleGenerateTodaysMockSummary = async () => {
     setIsGeneratingTodaysSummary(true);
     setGenerationError(null);
@@ -156,13 +163,13 @@ export default function StandupHistoryPage() {
           <CardContent>
             <div 
               className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap"
-              dangerouslySetInnerHTML={{ __html: todaysSummary.summaryText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br />') }} 
+              dangerouslySetInnerHTML={{ __html: formatSummaryTextForDisplay(todaysSummary.summaryText) }} 
             />
           </CardContent>
         </Card>
       )}
       
-      <CardTitle className="text-2xl mb-4">Historical Summaries</CardTitle>
+      <CardTitle className="text-2xl mb-4 mt-8">Historical Summaries</CardTitle>
       {historicalStandupSummaries.length === 0 ? (
         <Card>
           <CardHeader>
@@ -175,7 +182,7 @@ export default function StandupHistoryPage() {
           </CardContent>
         </Card>
       ) : (
-        <ScrollArea className="h-[calc(100vh-20rem)]"> {/* Adjust height as needed */}
+        <ScrollArea className="h-[calc(100vh-26rem)]"> {/* Adjusted height based on potential top card */}
           <div className="space-y-6">
             {historicalStandupSummaries.sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()).map((summary) => (
               <Card key={summary.id} className="shadow-md hover:shadow-lg transition-shadow">
@@ -196,7 +203,7 @@ export default function StandupHistoryPage() {
                 <CardContent>
                   <div 
                     className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap"
-                    dangerouslySetInnerHTML={{ __html: summary.summaryText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br />') }} 
+                    dangerouslySetInnerHTML={{ __html: formatSummaryTextForDisplay(summary.summaryText) }} 
                   />
                 </CardContent>
               </Card>
@@ -207,3 +214,4 @@ export default function StandupHistoryPage() {
     </div>
   );
 }
+

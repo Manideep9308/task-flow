@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Wand2, AlertTriangle, GanttChartSquare, HelpCircle, CalendarClock, ListTodo, Link as LinkIcon } from "lucide-react";
+import { Loader2, Wand2, AlertTriangle, GanttChartSquare, HelpCircle, CalendarClock, ListTodo, Link as LinkIcon, Lightbulb } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useTasks } from "@/contexts/task-context";
 import type { Task } from "@/lib/types";
@@ -79,7 +79,7 @@ export default function TimeTravelPage() {
             <div>
               <CardTitle className="text-3xl font-bold">Task Time Travel Simulation</CardTitle>
               <CardDescription className="text-md">
-                Experiment with timeline changes and predict outcomes without affecting live data.
+                Experiment with timeline changes and predict outcomes without affecting live project data.
               </CardDescription>
             </div>
           </div>
@@ -165,7 +165,6 @@ export default function TimeTravelPage() {
                     )}
                 </div>
 
-
                 {prediction.affectedTasks && prediction.affectedTasks.length > 0 && (
                   <div>
                     <h4 className="font-semibold text-lg flex items-center gap-2">
@@ -189,7 +188,7 @@ export default function TimeTravelPage() {
 
                 {prediction.warningsAndConsiderations && prediction.warningsAndConsiderations.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-lg">Key Warnings & Considerations:</h4>
+                    <h4 className="font-semibold text-lg mt-4">Key Warnings & Considerations:</h4>
                     <ScrollArea className="h-40 w-full rounded-md border p-3 bg-muted/30 mt-2">
                       <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
                         {prediction.warningsAndConsiderations.map((warning, index) => (
@@ -199,8 +198,28 @@ export default function TimeTravelPage() {
                     </ScrollArea>
                   </div>
                 )}
-                 {(!prediction.warningsAndConsiderations || prediction.warningsAndConsiderations.length === 0) && (!prediction.affectedTasks || prediction.affectedTasks.length === 0) && !prediction.predictedCompletionDate && (
-                    <p className="text-sm text-muted-foreground text-center py-4">No specific detailed predictions (completion date, affected tasks, or warnings) were highlighted by the AI for this scenario beyond the general summary.</p>
+
+                {prediction.suggestedSolutions && prediction.suggestedSolutions.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-lg mt-4 flex items-center gap-2">
+                        <Lightbulb className="h-5 w-5 text-muted-foreground" />
+                        Suggested Solutions & Mitigation Strategies:
+                    </h4>
+                    <ScrollArea className="h-40 w-full rounded-md border p-3 bg-muted/30 mt-2">
+                      <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                        {prediction.suggestedSolutions.map((solution, index) => (
+                          <li key={index}>{solution}</li>
+                        ))}
+                      </ul>
+                    </ScrollArea>
+                  </div>
+                )}
+
+                 {(!prediction.warningsAndConsiderations || prediction.warningsAndConsiderations.length === 0) && 
+                  (!prediction.affectedTasks || prediction.affectedTasks.length === 0) && 
+                  !prediction.predictedCompletionDate &&
+                  (!prediction.suggestedSolutions || prediction.suggestedSolutions.length === 0) && (
+                    <p className="text-sm text-muted-foreground text-center py-4">No specific detailed predictions (completion date, affected tasks, warnings, or solutions) were highlighted by the AI for this scenario beyond the general summary.</p>
                 )}
               </CardContent>
               <CardFooter>

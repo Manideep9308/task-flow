@@ -4,12 +4,13 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ShieldCheck, Users, Settings, UserCircle, Edit3, Paintbrush, AlertTriangle } from "lucide-react"; // Corrected to Paintbrush
+import { ShieldCheck, Users, Settings, UserCircle, Edit3, Paintbrush, AlertTriangle, Search } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { getInitials } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input"; // Added Input import
 import {
   Dialog,
   DialogContent,
@@ -45,6 +46,7 @@ export default function AdminPage() {
   const [isEditRoleDialogOpen, setIsEditRoleDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [selectedRole, setSelectedRole] = useState<UserRole | undefined>(undefined);
+  const [userSearchTerm, setUserSearchTerm] = useState(""); // State for user search
 
   // State for mock application settings
   const [selectedMockTheme, setSelectedMockTheme] = useState<string>('neon');
@@ -63,6 +65,13 @@ export default function AdminPage() {
     setIsEditRoleDialogOpen(false);
     setEditingUser(null);
   };
+
+  const filteredUsers = assignableUsers.filter(user => {
+    const searchTermLower = userSearchTerm.toLowerCase();
+    const nameMatch = user.name?.toLowerCase().includes(searchTermLower);
+    const emailMatch = user.email.toLowerCase().includes(searchTermLower);
+    return nameMatch || emailMatch;
+  });
 
   return (
     <>
@@ -87,12 +96,24 @@ export default function AdminPage() {
                   User Overview
                 </CardTitle>
                 <CardDescription>List of all registered users in the system.</CardDescription>
+                <div className="pt-2">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="search"
+                      placeholder="Search users by name or email..."
+                      className="w-full rounded-lg bg-background pl-8"
+                      value={userSearchTerm}
+                      onChange={(e) => setUserSearchTerm(e.target.value)}
+                    />
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                {assignableUsers.length > 0 ? (
+                {filteredUsers.length > 0 ? (
                   <ScrollArea className="h-[300px] pr-4">
                     <div className="space-y-3">
-                      {assignableUsers.map(user => (
+                      {filteredUsers.map(user => (
                         <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg bg-muted/30 hover:bg-muted/50">
                           <div className="flex items-center gap-3">
                             <Avatar className="h-9 w-9 text-sm">
@@ -116,7 +137,9 @@ export default function AdminPage() {
                     </div>
                   </ScrollArea>
                 ) : (
-                  <p className="text-muted-foreground text-center py-8">No users found.</p>
+                  <p className="text-muted-foreground text-center py-8">
+                    {userSearchTerm ? "No users found matching your search." : "No users found."}
+                  </p>
                 )}
               </CardContent>
             </Card>

@@ -85,6 +85,7 @@ export interface TaskSnapshot {
   dueDate?: string;
   assignedTo?: string;
   description?: string;
+  category?: string; // Added category
 }
 
 export interface PredictTimelineImpactInput {

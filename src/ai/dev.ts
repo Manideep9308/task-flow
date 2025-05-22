@@ -12,4 +12,4 @@ import '@/ai/flows/suggest-chat-replies-flow.ts';
 import '@/ai/flows/generate-chat-highlights-flow.ts'; 
 import '@/ai/flows/generate-project-health-report-flow.ts';
 import '@/ai/flows/app-assistant-flow.ts';
-import '@/ai/flows/generate-risk-radar-flow.ts'; // Added new risk radar flow
+// import '@/ai/flows/generate-risk-radar-flow.ts'; // Removed risk radar flow

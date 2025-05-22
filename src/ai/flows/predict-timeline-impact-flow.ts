@@ -28,10 +28,18 @@ const PredictTimelineImpactInputSchema = z.object({
 });
 export type PredictTimelineImpactInput = z.infer<typeof PredictTimelineImpactInputSchema>;
 
+const AffectedTaskSchema = z.object({
+  taskId: z.string().describe("The ID of an existing task from the 'Current Tasks Overview' list."),
+  title: z.string().describe("The original title of the affected task."),
+  impact: z.string().describe("A concise description of how this specific task is affected by the scenario (e.g., 'Delayed by 1 week', 'Becomes critical path', 'Risk of overload due to changed dependencies', 'Assignee change might cause ramp-up time')."),
+});
+
 const PredictTimelineImpactOutputSchema = z.object({
   impactSummary: z.string().describe('A concise, high-level textual summary of the predicted impact on the project timeline, deadlines, and potential issues.'),
   riskLevel: z.enum(['low', 'medium', 'high', 'unknown']).describe("The AI's assessment of the overall risk level introduced by the scenario ('low', 'medium', 'high', or 'unknown')."),
-  warningsAndConsiderations: z.array(z.string()).optional().describe("A list of specific warnings, potential bottlenecks, resource conflicts, or key considerations the user should be aware of. This could include tasks at risk, or areas needing closer monitoring."),
+  predictedCompletionDate: z.string().optional().describe("The AI's prediction for the new overall project completion date (e.g., YYYY-MM-DD), if it can be reasonably estimated from the scenario. If not estimable, this field may be omitted or state 'Not clearly estimable'."),
+  affectedTasks: z.array(AffectedTaskSchema).optional().describe("A list of specific existing tasks that are significantly impacted by the scenario. This should detail direct consequences on individual tasks."),
+  warningsAndConsiderations: z.array(z.string()).optional().describe("A list of general warnings, potential bottlenecks (e.g. resource conflicts if inferable beyond specific tasks), or key considerations the user should be aware of. This is for broader implications not tied to a single task."),
 });
 export type PredictTimelineImpactOutput = z.infer<typeof PredictTimelineImpactOutputSchema>;
 
@@ -62,11 +70,13 @@ Scenario to Simulate:
 Based on the scenario, provide:
 1.  **Impact Summary**: A brief, high-level summary of how this scenario might affect the project's overall timeline and key objectives.
 2.  **Risk Level**: Assess the overall risk to the project as 'low', 'medium', or 'high'. If uncertain, use 'unknown'.
-3.  **Warnings and Considerations**: List any specific warnings, potential issues (like tasks becoming critical, resource conflicts if inferable), or important points the user should consider. If none, this can be an empty list.
+3.  **New Predicted Project Completion Date**: If you can reasonably estimate a new overall project completion date based on the scenario and current tasks, provide it in YYYY-MM-DD format. If not clearly estimable, you can omit this field or explicitly state "Not clearly estimable".
+4.  **Affected Tasks**: List specific existing tasks that are significantly impacted by the scenario. For each affected task, provide its ID (from the "Current Tasks Overview" list above), its original title, and a concise description of the impact (e.g., "Delayed by 1 week due to [reason]", "Assignee change may cause ramp-up time", "Becomes critical path because [reason]"). If no specific tasks are uniquely affected beyond the general summary, this can be an empty list.
+5.  **Warnings and Considerations**: List any general warnings, potential issues (like resource conflicts if inferable beyond specific tasks), or important points the user should consider. This is for broader implications not tied to a single task.
 
 Focus on logical consequences of the described changes. Do not invent new tasks or make assumptions beyond the provided scenario and task list.
-For example, if a critical task is delayed, mention that. If a user is assigned more work in the scenario, you might note a potential increase in their workload.
-Be concise and actionable in your output.
+For example, if a critical task is delayed, mention that in 'Affected Tasks' and summarize in 'Impact Summary'. If a user is assigned more work in the scenario, you might note a potential increase in their workload under 'Warnings and Considerations' or as an impact on an affected task.
+Be concise and actionable in your output. Ensure IDs for affected tasks are accurate from the provided list.
 `,
 });
 
@@ -99,3 +109,4 @@ const predictTimelineImpactFlow = ai.defineFlow(
     return output;
   }
 );
+

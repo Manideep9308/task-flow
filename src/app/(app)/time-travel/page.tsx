@@ -5,13 +5,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Wand2, AlertTriangle, GanttChartSquare, HelpCircle } from "lucide-react";
+import { Loader2, Wand2, AlertTriangle, GanttChartSquare, HelpCircle, CalendarClock, ListTodo, Link as LinkIcon } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useTasks } from "@/contexts/task-context";
 import type { Task } from "@/lib/types";
 import { predictTimelineImpact, type PredictTimelineImpactInput, type PredictTimelineImpactOutput } from "@/ai/flows/predict-timeline-impact-flow";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import Link from "next/link";
 
 export default function TimeTravelPage() {
   const { tasks, isLoading: tasksLoading } = useTasks();
@@ -98,7 +99,7 @@ export default function TimeTravelPage() {
               disabled={isLoadingPrediction || tasksLoading}
             />
             <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              <HelpCircle className="h-3 w-3"/> Be specific about tasks, changes, and team members for better predictions.
+              <HelpCircle className="h-3 w-3"/> Be specific about tasks (use titles or IDs if possible), changes, and team members for better predictions.
             </p>
           </div>
 
@@ -138,25 +139,58 @@ export default function TimeTravelPage() {
                 <CardTitle className="text-xl text-primary">AI Predicted Impact Analysis</CardTitle>
                 <CardDescription>Based on your scenario: "{scenarioDescription.length > 100 ? scenarioDescription.substring(0,97) + '...' : scenarioDescription}"</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 <div>
                   <h4 className="font-semibold text-lg">Overall Impact Summary:</h4>
                   <p className="text-muted-foreground prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">{prediction.impactSummary}</p>
                 </div>
                 
-                <div>
-                  <h4 className="font-semibold text-lg inline-flex items-center gap-2">
-                    Predicted Risk Level:
-                    <Badge variant={getRiskBadgeVariant(prediction.riskLevel)} className="text-sm px-2 py-0.5 capitalize">
-                      {prediction.riskLevel || "Unknown"}
-                    </Badge>
-                  </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="font-semibold text-lg inline-flex items-center gap-2">
+                        Predicted Risk Level:
+                        <Badge variant={getRiskBadgeVariant(prediction.riskLevel)} className="text-sm px-2 py-0.5 capitalize">
+                          {prediction.riskLevel || "Unknown"}
+                        </Badge>
+                      </h4>
+                    </div>
+                    {prediction.predictedCompletionDate && (
+                        <div>
+                            <h4 className="font-semibold text-lg flex items-center gap-2">
+                                <CalendarClock className="h-5 w-5 text-muted-foreground" />
+                                New Predicted Completion:
+                            </h4>
+                            <p className="text-muted-foreground">{prediction.predictedCompletionDate}</p>
+                        </div>
+                    )}
                 </div>
+
+
+                {prediction.affectedTasks && prediction.affectedTasks.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-lg flex items-center gap-2">
+                        <ListTodo className="h-5 w-5 text-muted-foreground" />
+                        Specifically Affected Tasks:
+                    </h4>
+                    <ScrollArea className="h-48 w-full rounded-md border p-3 bg-muted/30 mt-2">
+                      <ul className="space-y-2 text-sm">
+                        {prediction.affectedTasks.map((affectedTask, index) => (
+                          <li key={index} className="p-2 border-b border-border/50 last:border-b-0">
+                            <Link href={`/tasks?openTask=${affectedTask.taskId}`} className="font-medium text-primary hover:underline flex items-center gap-1">
+                              <LinkIcon className="h-3 w-3"/>{affectedTask.title} (ID: {affectedTask.taskId})
+                            </Link>
+                            <p className="text-muted-foreground ml-4 text-xs italic">- Impact: {affectedTask.impact}</p>
+                          </li>
+                        ))}
+                      </ul>
+                    </ScrollArea>
+                  </div>
+                )}
 
                 {prediction.warningsAndConsiderations && prediction.warningsAndConsiderations.length > 0 && (
                   <div>
                     <h4 className="font-semibold text-lg">Key Warnings & Considerations:</h4>
-                    <ScrollArea className="h-40 w-full rounded-md border p-3 bg-muted/30">
+                    <ScrollArea className="h-40 w-full rounded-md border p-3 bg-muted/30 mt-2">
                       <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
                         {prediction.warningsAndConsiderations.map((warning, index) => (
                           <li key={index}>{warning}</li>
@@ -165,8 +199,8 @@ export default function TimeTravelPage() {
                     </ScrollArea>
                   </div>
                 )}
-                 {!prediction.warningsAndConsiderations || prediction.warningsAndConsiderations.length === 0 && (
-                    <p className="text-sm text-muted-foreground">No specific warnings or considerations highlighted by the AI for this scenario.</p>
+                 {(!prediction.warningsAndConsiderations || prediction.warningsAndConsiderations.length === 0) && (!prediction.affectedTasks || prediction.affectedTasks.length === 0) && !prediction.predictedCompletionDate && (
+                    <p className="text-sm text-muted-foreground text-center py-4">No specific detailed predictions (completion date, affected tasks, or warnings) were highlighted by the AI for this scenario beyond the general summary.</p>
                 )}
               </CardContent>
               <CardFooter>
@@ -181,3 +215,4 @@ export default function TimeTravelPage() {
     </div>
   );
 }
+

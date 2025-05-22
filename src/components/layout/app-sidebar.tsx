@@ -13,7 +13,18 @@ import {
   SidebarMenuButton,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { ClipboardCheck, LayoutDashboard, ListChecks, FileArchive, ScrollText, Settings, LogOut, CalendarDays, ShieldCheck } from 'lucide-react';
+import { 
+    ClipboardCheck, 
+    LayoutDashboard, 
+    ListChecks, 
+    FileArchive, 
+    ScrollText, 
+    Settings, 
+    LogOut, 
+    CalendarDays, 
+    ShieldCheck,
+    MessageSquareText // Added icon for Standup History
+} from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
 const navItems = [
@@ -22,6 +33,7 @@ const navItems = [
   { href: '/calendar', label: 'Calendar', icon: CalendarDays },
   { href: '/files', label: 'Files', icon: FileArchive },
   { href: '/summary', label: 'Summary', icon: ScrollText },
+  { href: '/standup-history', label: 'Standups', icon: MessageSquareText }, // New Item
 ];
 
 const adminNavItems = [

@@ -23,6 +23,7 @@ export interface Task {
   files?: TaskFile[];
   order: number; // For maintaining order within Kanban columns
   assignedTo?: string; // User ID of the assignee
+  imageUrl?: string; // Data URI for a generated image
 }
 
 export type UserRole = 'admin' | 'member';
@@ -34,4 +35,20 @@ export interface User {
   name?: string;
   role?: UserRole; // Add role property
   // Add other relevant user fields here, e.g., avatarUrl
+}
+
+// For Smart Standup Bot
+export interface StandupReportItem {
+  userId: string;
+  userName: string;
+  didYesterday: string;
+  doingToday: string;
+  blockers: string;
+}
+
+export interface StandupSummary {
+  id: string;
+  date: string; // ISO string YYYY-MM-DD
+  summaryText: string;
+  projectId?: string; // Optional: if summaries are per-project
 }

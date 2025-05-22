@@ -30,8 +30,8 @@ import { suggestTaskDetails } from '@/ai/flows/suggest-task-details-flow';
 import { suggestSubtasks } from '@/ai/flows/suggest-subtasks-flow';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Card, CardContent, CardHeader, CardTitle as UiCardTitle } from '@/components/ui/card';
 
 
 const taskFormSchema = z.object({
@@ -232,8 +232,8 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-      <ScrollArea className="max-h-[70vh] pr-3"> {/* Adjusted max-h */}
-        <div className="space-y-6 p-1"> {/* Added padding for scroll content */}
+      <ScrollArea className="max-h-[70vh] pr-3">
+        <div className="space-y-6 p-1">
           <div>
             <Label htmlFor="title">Title</Label>
             <Input id="title" {...form.register('title')} placeholder="e.g., Schedule team meeting" />
@@ -407,64 +407,66 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
               </Button>
             </div>
           </div>
+          
+          <Separator className="my-6" />
 
-          <Separator />
-
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <Label className="text-base font-semibold flex items-center gap-2">
+          <Card className="bg-muted/20 shadow-inner">
+            <CardHeader className="pb-2 pt-4 px-4">
+              <UiCardTitle className="text-lg font-semibold flex items-center gap-2">
                 <Brain className="h-5 w-5 text-primary" />
                 AI Task Breakdown
-              </Label>
+              </UiCardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4 space-y-3">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={handleSuggestSubtasks}
                 disabled={isSuggestingSubtasks || !form.watch('title')}
-                className="text-xs"
+                className="w-full text-xs"
               >
                 {isSuggestingSubtasks ? (
                   <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                 ) : (
-                  <Brain className="mr-1 h-3 w-3" /> /* Consistent icon */
+                  <Brain className="mr-1 h-3 w-3" />
                 )}
-                Suggest Sub-tasks
+                Suggest Sub-tasks / Checklist
               </Button>
-            </div>
-             {isSuggestingSubtasks && (
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground p-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Generating sub-task suggestions...</span>
-              </div>
-            )}
-            {subtasksError && !isSuggestingSubtasks && (
-              <Alert variant="destructive" className="my-2">
-                <AlertDescription>{subtasksError}</AlertDescription>
-              </Alert>
-            )}
-            {suggestedSubtasksList.length > 0 && !isSuggestingSubtasks && (
-              <Card className="mt-2 p-4 bg-muted/30">
-                <CardContent className="p-0">
-                  <p className="text-sm font-medium mb-2">Suggested Sub-tasks/Checklist:</p>
-                  <ul className="list-disc list-inside space-y-1 text-sm">
+              {isSuggestingSubtasks && (
+                <div className="flex items-center space-x-2 text-sm text-muted-foreground p-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Generating sub-task suggestions...</span>
+                </div>
+              )}
+              {subtasksError && !isSuggestingSubtasks && (
+                <Alert variant="destructive" className="my-2">
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{subtasksError}</AlertDescription>
+                </Alert>
+              )}
+              {suggestedSubtasksList.length > 0 && !isSuggestingSubtasks && !subtasksError && (
+                <div className="mt-2 p-3 border rounded-md bg-background/50 text-sm">
+                  <p className="font-medium mb-1.5 text-muted-foreground">Suggested Sub-tasks/Checklist:</p>
+                  <ul className="list-disc list-inside space-y-1">
                     {suggestedSubtasksList.map((subtask, index) => (
                       <li key={index}>{subtask}</li>
                     ))}
                   </ul>
-                </CardContent>
-              </Card>
-            )}
-            {!isSuggestingSubtasks && !subtasksError && suggestedSubtasksList.length === 0 && (
-              <p className="text-xs text-muted-foreground text-center py-2">
-                Enter a title and click "Suggest Sub-tasks" for AI-powered breakdown.
-              </p>
-            )}
-          </div>
+                </div>
+              )}
+              {!isSuggestingSubtasks && !subtasksError && suggestedSubtasksList.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-2">
+                  Enter a title and click "Suggest Sub-tasks" for AI-powered breakdown.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
         </div>
       </ScrollArea>
 
-      <div className="flex justify-end gap-2 pt-4 border-t mt-auto"> {/* Ensure this is outside ScrollArea */}
+      <div className="flex justify-end gap-2 pt-4 border-t mt-auto">
         <Button type="button" variant="outline" onClick={() => onOpenChange?.(false)}>
           Cancel
         </Button>
@@ -480,5 +482,3 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
     </form>
   );
 }
-
-    

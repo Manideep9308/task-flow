@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ShieldCheck, Users, Settings, UserCircle, Edit3, Paintbrush, AlertTriangle, Search } from "lucide-react";
+import { ShieldCheck, Users, Settings, UserCircle, Edit3, Paintbrush, AlertTriangle, Search, Info } from "lucide-react"; // Added Info icon
 import { useAuth } from "@/contexts/auth-context";
 import { getInitials } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import type { User, UserRole } from "@/lib/types";
 import { Switch } from "@/components/ui/switch";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Added Alert components
 
 const ROLES_AVAILABLE: { value: UserRole; label: string }[] = [
   { value: 'admin', label: 'Admin' },
@@ -90,10 +91,12 @@ export default function AdminPage() {
           <CardContent className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <Card className="hover:shadow-md transition-shadow col-span-1 lg:col-span-2">
               <CardHeader>
-                <CardTitle className="text-xl flex items-center gap-2">
-                  <Users className="h-5 w-5 text-primary" />
-                  User Overview
-                </CardTitle>
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <Users className="h-5 w-5 text-primary" />
+                    User Overview
+                  </CardTitle>
+                </div>
                 <CardDescription>List of all registered users in the system.</CardDescription>
                 <div className="pt-2">
                   <div className="relative">
@@ -183,6 +186,15 @@ export default function AdminPage() {
                         />
                     </div>
                   </div>
+                  {isMaintenanceModeEnabled && (
+                    <Alert variant="default" className="mt-2 border-primary/50 bg-primary/10">
+                      <Info className="h-4 w-4 text-primary" />
+                      <AlertTitle className="text-primary font-medium">Mock Maintenance Mode ON</AlertTitle>
+                      <AlertDescription className="text-primary/80">
+                        This is a visual indicator on the admin page only and does not affect the live application.
+                      </AlertDescription>
+                    </Alert>
+                  )}
 
                    <p className="text-xs text-muted-foreground pt-2">
                     These settings are for demonstration and do not persist or affect the actual application.

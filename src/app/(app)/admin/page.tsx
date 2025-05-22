@@ -10,7 +10,7 @@ import { getInitials } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input"; // Added Input import
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { User, UserRole } from "@/lib/types";
-import { Switch } from "@/components/ui/switch"; 
+import { Switch } from "@/components/ui/switch";
 
 const ROLES_AVAILABLE: { value: UserRole; label: string }[] = [
   { value: 'admin', label: 'Admin' },
@@ -46,9 +46,8 @@ export default function AdminPage() {
   const [isEditRoleDialogOpen, setIsEditRoleDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [selectedRole, setSelectedRole] = useState<UserRole | undefined>(undefined);
-  const [userSearchTerm, setUserSearchTerm] = useState(""); // State for user search
+  const [userSearchTerm, setUserSearchTerm] = useState("");
 
-  // State for mock application settings
   const [selectedMockTheme, setSelectedMockTheme] = useState<string>('neon');
   const [isMaintenanceModeEnabled, setIsMaintenanceModeEnabled] = useState(false);
 
@@ -75,7 +74,7 @@ export default function AdminPage() {
 
   return (
     <>
-      <div className="container mx-auto">
+      <div className="container mx-auto pt-0">
         <Card className="shadow-xl mt-2 md:mt-6">
           <CardHeader className="pb-4">
             <div className="flex items-center gap-3">
@@ -153,13 +152,13 @@ export default function AdminPage() {
                   </CardTitle>
                   <CardDescription>Configure global application parameters.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="mock-theme-select" className="flex items-center gap-1">
+                    <Label htmlFor="mock-theme-select" className="flex items-center gap-1 font-medium">
                       <Paintbrush className="h-4 w-4" /> App Theme (Mock)
                     </Label>
                     <Select value={selectedMockTheme} onValueChange={setSelectedMockTheme}>
-                      <SelectTrigger id="mock-theme-select">
+                      <SelectTrigger id="mock-theme-select" className="w-full">
                         <SelectValue placeholder="Select theme" />
                       </SelectTrigger>
                       <SelectContent>
@@ -171,16 +170,20 @@ export default function AdminPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex items-center justify-between space-x-2 pt-2">
-                    <Label htmlFor="maintenance-mode-switch" className="flex items-center gap-1">
-                      <AlertTriangle className="h-4 w-4" /> Enable Maintenance (Mock)
-                    </Label>
-                    <Switch 
-                      id="maintenance-mode-switch" 
-                      checked={isMaintenanceModeEnabled}
-                      onCheckedChange={setIsMaintenanceModeEnabled}
-                    />
+
+                  <div className="space-y-2">
+                     <div className="flex items-center justify-between">
+                        <Label htmlFor="maintenance-mode-switch" className="flex items-center gap-1 font-medium">
+                          <AlertTriangle className="h-4 w-4" /> Enable Maintenance (Mock)
+                        </Label>
+                        <Switch
+                          id="maintenance-mode-switch"
+                          checked={isMaintenanceModeEnabled}
+                          onCheckedChange={setIsMaintenanceModeEnabled}
+                        />
+                    </div>
                   </div>
+
                    <p className="text-xs text-muted-foreground pt-2">
                     These settings are for demonstration and do not persist or affect the actual application.
                   </p>
@@ -218,8 +221,8 @@ export default function AdminPage() {
             </DialogHeader>
             <div className="py-4 space-y-2">
               <Label htmlFor="role-select">Role</Label>
-              <Select 
-                value={selectedRole} 
+              <Select
+                value={selectedRole}
                 onValueChange={(value) => setSelectedRole(value as UserRole)}
               >
                 <SelectTrigger id="role-select">

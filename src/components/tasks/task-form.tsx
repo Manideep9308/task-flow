@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Paperclip, Trash2, UploadCloud, UserCircle, Wand2, Loader2, ImagePlus } from 'lucide-react';
+import { CalendarIcon, Paperclip, Trash2, UploadCloud, UserCircle, Wand2, Loader2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { TASK_PRIORITIES, TASK_STATUSES, DEFAULT_CATEGORIES } from '@/lib/constants';
@@ -27,8 +27,8 @@ import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { suggestTaskDetails } from '@/ai/flows/suggest-task-details-flow';
-import { generateTaskImage } from '@/ai/flows/generate-task-image-flow';
-import Image from 'next/image';
+// Removed: import { generateTaskImage } from '@/ai/flows/generate-task-image-flow';
+// Removed: import Image from 'next/image';
 
 const taskFormSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters." }),
@@ -49,7 +49,7 @@ const taskFormSchema = z.object({
     size: z.number(),
     type: z.string(),
   })).optional(),
-  imageUrl: z.string().optional(),
+  // Removed: imageUrl: z.string().optional(),
 });
 
 type TaskFormValues = z.infer<typeof taskFormSchema>;
@@ -68,8 +68,8 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
   const { toast } = useToast();
   const [currentFiles, setCurrentFiles] = useState<TaskFile[]>(task?.files || []);
   const [isSuggestingDetails, setIsSuggestingDetails] = useState(false);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | undefined>(task?.imageUrl);
+  // Removed: const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  // Removed: const [generatedImageUrl, setGeneratedImageUrl] = useState<string | undefined>(task?.imageUrl);
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
@@ -82,7 +82,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
       category: task?.category || '',
       assignedTo: task?.assignedTo || UNASSIGNED_FORM_VALUE,
       files: task?.files || [],
-      imageUrl: task?.imageUrl || undefined,
+      // Removed: imageUrl: task?.imageUrl || undefined,
     },
   });
 
@@ -97,10 +97,10 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
         category: task.category || '',
         assignedTo: task.assignedTo || UNASSIGNED_FORM_VALUE,
         files: task.files || [],
-        imageUrl: task.imageUrl || undefined,
+        // Removed: imageUrl: task.imageUrl || undefined,
       });
       setCurrentFiles(task.files || []);
-      setGeneratedImageUrl(task.imageUrl);
+      // Removed: setGeneratedImageUrl(task.imageUrl);
     } else {
       form.reset({
         title: '',
@@ -111,10 +111,10 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
         category: '',
         assignedTo: UNASSIGNED_FORM_VALUE,
         files: [],
-        imageUrl: undefined,
+        // Removed: imageUrl: undefined,
       });
       setCurrentFiles([]);
-      setGeneratedImageUrl(undefined);
+      // Removed: setGeneratedImageUrl(undefined);
     }
   }, [task, form]);
 
@@ -153,44 +153,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
     }
   };
 
-  const handleGenerateImage = async () => {
-    const title = form.getValues('title');
-    const description = form.getValues('description');
-
-    if (!title.trim()) {
-      toast({
-        variant: 'destructive',
-        title: 'Title Required',
-        description: 'Please enter a task title before generating an image.',
-      });
-      return;
-    }
-
-    setIsGeneratingImage(true);
-    setGeneratedImageUrl(undefined); 
-    try {
-      const result = await generateTaskImage({ taskTitle: title, taskDescription: description });
-      if (result.imageDataUri) {
-        setGeneratedImageUrl(result.imageDataUri);
-        form.setValue('imageUrl', result.imageDataUri, { shouldValidate: true });
-        toast({
-          title: 'Image Generated',
-          description: 'Cover image has been generated.',
-        });
-      } else {
-        throw new Error(result.failureReason || 'AI did not return an image URI.');
-      }
-    } catch (error) {
-      console.error('Error generating task image:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Image Generation Failed',
-        description: error instanceof Error ? error.message : 'Could not get AI generated image.',
-      });
-    } finally {
-      setIsGeneratingImage(false);
-    }
-  };
+  // Removed: handleGenerateImage function
 
   const onSubmit = (data: TaskFormValues) => {
     const taskData = {
@@ -198,7 +161,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
       dueDate: data.dueDate ? format(data.dueDate, 'yyyy-MM-dd') : undefined,
       assignedTo: data.assignedTo === UNASSIGNED_FORM_VALUE ? undefined : data.assignedTo,
       files: currentFiles,
-      imageUrl: generatedImageUrl,
+      // Removed: imageUrl: generatedImageUrl,
     };
 
     if (task && task.id) {
@@ -211,7 +174,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
     onOpenChange?.(false);
     form.reset();
     setCurrentFiles([]);
-    setGeneratedImageUrl(undefined);
+    // Removed: setGeneratedImageUrl(undefined);
   };
 
   const handleFileAdd = () => {
@@ -260,38 +223,10 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
             )}
             AI Suggest Details
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleGenerateImage}
-            disabled={isGeneratingImage || !form.watch('title')}
-            className="text-xs flex-1"
-          >
-            {isGeneratingImage ? (
-              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-            ) : (
-              <ImagePlus className="mr-1 h-3 w-3" />
-            )}
-            Generate Cover Image
-          </Button>
+          {/* Removed: Generate Cover Image Button */}
       </div>
 
-      {generatedImageUrl && (
-        <div className="mt-4 space-y-2">
-          <Label>Image Preview</Label>
-          <div className="border rounded-md p-2 flex justify-center items-center bg-muted/20 aspect-video max-h-48 w-full">
-            <Image 
-                src={generatedImageUrl} 
-                alt="Generated task cover" 
-                width={300}
-                height={168}
-                className="rounded-md object-contain max-h-full max-w-full"
-                data-ai-hint="abstract task"
-            />
-          </div>
-        </div>
-      )}
+      {/* Removed: Image Preview Section */}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -440,7 +375,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
         <Button type="button" variant="outline" onClick={() => onOpenChange?.(false)}>
           Cancel
         </Button>
-        <Button type="submit" disabled={form.formState.isSubmitting || isSuggestingDetails || isGeneratingImage}>
+        <Button type="submit" disabled={form.formState.isSubmitting || isSuggestingDetails /* Removed: || isGeneratingImage */ }>
           {form.formState.isSubmitting ? 'Saving...' : (task ? 'Save Changes' : 'Create Task')}
         </Button>
       </div>

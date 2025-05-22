@@ -4,13 +4,13 @@
 import type { Task, TaskPriority, User } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'; // Removed AvatarImage as it's not used
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowUp, Minus, ArrowDown, CalendarDays, Paperclip } from 'lucide-react';
 import { cn, getInitials } from '@/lib/utils';
 import type { DraggableProvided } from 'react-beautiful-dnd'; // Placeholder type
 import { useAuth } from '@/contexts/auth-context';
-import Image from 'next/image'; // Import next/image
+// Removed: import Image from 'next/image';
 
 interface TaskCardProps {
   task: Task;
@@ -42,9 +42,9 @@ export function TaskCard({ task, isDragging, provided, onClick }: TaskCardProps)
     "mb-4 shadow-md hover:shadow-lg transition-shadow duration-200 cursor-grab",
     isDragging ? "shadow-xl rotate-3" : "",
     {
-      'border-l-4 border-red-500': task.priority === 'high' && !task.imageUrl, // Only show border if no image
-      'border-l-4 border-yellow-500': task.priority === 'medium' && !task.imageUrl,
-      'border-l-4 border-green-500': task.priority === 'low' && !task.imageUrl,
+      'border-l-4 border-red-500': task.priority === 'high',
+      'border-l-4 border-yellow-500': task.priority === 'medium',
+      'border-l-4 border-green-500': task.priority === 'low',
     }
   );
 
@@ -59,18 +59,8 @@ export function TaskCard({ task, isDragging, provided, onClick }: TaskCardProps)
       aria-label={`Task: ${task.title}`}
     >
       <Card className={cardClasses}>
-        {task.imageUrl && (
-          <div className="relative w-full h-32 overflow-hidden rounded-t-lg">
-            <Image 
-              src={task.imageUrl} 
-              alt={`Cover image for ${task.title}`} 
-              layout="fill" 
-              objectFit="cover" 
-              data-ai-hint="task cover"
-            />
-          </div>
-        )}
-        <CardHeader className={cn("p-4", task.imageUrl ? "pt-2" : "")}>
+        {/* Removed Image display */}
+        <CardHeader className={cn("p-4")}>
           <div className="flex justify-between items-start">
             <CardTitle className="text-base font-semibold flex-1">{task.title}</CardTitle>
             {assignedUser && (
@@ -124,12 +114,11 @@ export function BasicTaskCard({ task, onClick }: Pick<TaskCardProps, 'task' | 'o
   const assignedUser = task.assignedTo ? assignableUsers.find(u => u.id === task.assignedTo) : null;
   
   const cardClasses = cn(
-    "shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer bg-card", // Ensure bg-card for consistent background
+    "shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer bg-card",
     {
-      // Priority border only if no image, or a more subtle indicator if image exists
-      'border-l-4 border-red-500': task.priority === 'high' && !task.imageUrl,
-      'border-l-4 border-yellow-500': task.priority === 'medium' && !task.imageUrl,
-      'border-l-4 border-green-500': task.priority === 'low' && !task.imageUrl,
+      'border-l-4 border-red-500': task.priority === 'high',
+      'border-l-4 border-yellow-500': task.priority === 'medium',
+      'border-l-4 border-green-500': task.priority === 'low',
     }
   );
 
@@ -141,18 +130,8 @@ export function BasicTaskCard({ task, onClick }: Pick<TaskCardProps, 'task' | 'o
       aria-label={`Task: ${task.title}`}
     >
       <Card className={cardClasses}>
-        {task.imageUrl && (
-          <div className="relative w-full h-32 overflow-hidden rounded-t-md">
-            <Image 
-              src={task.imageUrl} 
-              alt={`Cover image for ${task.title}`} 
-              layout="fill" 
-              objectFit="cover" 
-              data-ai-hint="task illustration"
-            />
-          </div>
-        )}
-        <CardHeader className={cn("p-4", task.imageUrl ? "pt-2" : "")}>
+        {/* Removed Image display */}
+        <CardHeader className={cn("p-4")}>
           <div className="flex justify-between items-start">
             <CardTitle className="text-base font-semibold flex-1 line-clamp-2">{task.title}</CardTitle>
             {assignedUser && (

@@ -23,7 +23,6 @@ export interface Task {
   files?: TaskFile[];
   order: number; // For maintaining order within Kanban columns
   assignedTo?: string; // User ID of the assignee
-  imageUrl?: string; // Data URI for a generated image
 }
 
 export type UserRole = 'admin' | 'member';
@@ -51,4 +50,34 @@ export interface StandupSummary {
   date: string; // ISO string YYYY-MM-DD
   summaryText: string;
   projectId?: string; // Optional: if summaries are per-project
+}
+
+// For Predict Timeline Impact Flow
+export interface AffectedTask {
+  taskId: string;
+  title: string;
+  impact: string;
+}
+
+export interface PredictTimelineImpactOutput {
+  impactSummary: string;
+  riskLevel: 'low' | 'medium' | 'high' | 'unknown';
+  predictedCompletionDate?: string;
+  affectedTasks?: AffectedTask[];
+  warningsAndConsiderations?: string[];
+}
+
+export interface TaskSnapshot {
+  id: string;
+  title: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  dueDate?: string;
+  assignedTo?: string;
+  description?: string;
+}
+
+export interface PredictTimelineImpactInput {
+  currentTasks: TaskSnapshot[];
+  scenarioDescription: string;
 }

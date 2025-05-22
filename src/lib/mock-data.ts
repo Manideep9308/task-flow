@@ -23,7 +23,6 @@ export const mockTasks: Task[] = [
     ],
     order: 0,
     assignedTo: mockUserAliceId,
-    imageUrl: 'https://placehold.co/600x400.png',
   },
   {
     id: 'task-2',
@@ -95,17 +94,17 @@ export const mockStandupSummaries: StandupSummary[] = [
     summaryText: `**Project Alpha Standup - July 28, 2024**
 
 **Yesterday:**
-*   Alice: Finished homepage mockups (Task-1) and started research for exam (Task-6).
-*   Bob: Continued development on API user authentication (related to Task-2).
-*   Charlie: Went grocery shopping (Task-4).
+*   Alice: ✅ Finished homepage mockups (Task-1) and started research for exam (Task-6).
+*   Bob: 🚧 Continued development on API user authentication (related to Task-2).
+*   Charlie: ✅ Went grocery shopping (Task-4).
 
 **Today:**
-*   Alice: Will finalize homepage design details and continue exam study.
-*   Bob: Aims to complete the core API logic for task creation.
-*   Charlie: Will start planning for the personal budget review.
+*   Alice: 🚧 Will finalize homepage design details and continue exam study.
+*   Bob: 🚧 Aims to complete the core API logic for task creation.
+*   Charlie: 🚧 Will start planning for the personal budget review.
 
 **Blockers:**
-*   Bob: Minor issue with database schema migration script, needs review.
+*   Bob: ⚠️ Minor issue with database schema migration script, needs review. Task: "Develop API endpoints"
 `,
   },
   {
@@ -114,18 +113,17 @@ export const mockStandupSummaries: StandupSummary[] = [
     summaryText: `**Project Alpha Standup - July 27, 2024**
 
 **Yesterday:**
-*   Alice: Worked on initial wireframes for homepage (Task-1).
-*   Bob: Set up the development environment for API (Task-2).
-*   Charlie: Planned grocery list.
+*   Alice: 🚧 Worked on initial wireframes for homepage (Task-1).
+*   Bob: ✅ Set up the development environment for API (Task-2).
+*   Charlie: ✅ Planned grocery list.
 
 **Today:**
-*   Alice: Will iterate on homepage mockups based on feedback.
-*   Bob: To begin implementing API endpoints for tasks.
-*   Charlie: Grocery shopping (Task-4).
+*   Alice: 🚧 Will iterate on homepage mockups based on feedback.
+*   Bob: 🚧 To begin implementing API endpoints for tasks.
+*   Charlie: 🚧 Grocery shopping (Task-4).
 
 **Blockers:**
 *   None reported.
 `,
   },
 ];
-

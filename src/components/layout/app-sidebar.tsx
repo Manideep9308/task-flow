@@ -23,7 +23,8 @@ import {
     LogOut, 
     CalendarDays, 
     ShieldCheck,
-    MessageSquareText // Added icon for Standup History
+    MessageSquareText,
+    GanttChartSquare // Added icon for Time Travel
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -33,7 +34,8 @@ const navItems = [
   { href: '/calendar', label: 'Calendar', icon: CalendarDays },
   { href: '/files', label: 'Files', icon: FileArchive },
   { href: '/summary', label: 'Summary', icon: ScrollText },
-  { href: '/standup-history', label: 'Standups', icon: MessageSquareText }, // New Item
+  { href: '/standup-history', label: 'Standups', icon: MessageSquareText },
+  { href: '/time-travel', label: 'Time Travel', icon: GanttChartSquare }, // New Item for Time Travel
 ];
 
 const adminNavItems = [

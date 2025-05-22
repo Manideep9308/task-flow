@@ -24,7 +24,7 @@ import {
     CalendarDays,
     ShieldCheck,
     MessageSquareText,
-    Route, // Changed from GanttChartSquare
+    HelpCircle, // Changed from Route
     MessagesSquare,
     BarChart3
 } from 'lucide-react';
@@ -37,7 +37,7 @@ const navItems = [
   { href: '/files', label: 'Files', icon: FileArchive },
   { href: '/summary', label: 'Summary', icon: ScrollText },
   { href: '/standup-history', label: 'Standups', icon: MessageSquareText },
-  { href: '/time-travel', label: 'Scenario Planner', icon: Route }, // Updated label and icon
+  { href: '/time-travel', label: 'What-If Analyzer', icon: HelpCircle }, // Updated label and icon
   { href: '/team-chat', label: 'Team Chat', icon: MessagesSquare },
   { href: '/reports', label: 'Reports', icon: BarChart3 },
 ];

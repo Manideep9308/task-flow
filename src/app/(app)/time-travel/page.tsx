@@ -5,16 +5,16 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Wand2, AlertTriangle, Route as RouteIcon, HelpCircle, CalendarClock, ListTodo, Link as LinkIcon, Lightbulb } from "lucide-react"; // Changed GanttChartSquare to RouteIcon
+import { Loader2, Wand2, AlertTriangle, HelpCircle as PageIcon, CalendarClock, ListTodo, Link as LinkIcon, Lightbulb } from "lucide-react"; // Changed icon for the page
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useTasks } from "@/contexts/task-context";
-import type { Task } from "@/lib/types"; // Ensure Task type is imported if needed for context, though flow uses TaskSnapshot
+import type { Task } from "@/lib/types";
 import { predictTimelineImpact, type PredictTimelineImpactInput, type PredictTimelineImpactOutput } from "@/ai/flows/predict-timeline-impact-flow";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
 
-export default function ScenarioPlannerPage() { // Renamed component for clarity, though file name is still time-travel
+export default function WhatIfAnalyzerPage() { // Renamed component
   const { tasks, isLoading: tasksLoading } = useTasks();
   const [scenarioDescription, setScenarioDescription] = useState("");
   const [prediction, setPrediction] = useState<PredictTimelineImpactOutput | null>(null);
@@ -41,7 +41,7 @@ export default function ScenarioPlannerPage() { // Renamed component for clarity
         dueDate: t.dueDate,
         assignedTo: t.assignedTo,
         description: t.description,
-        category: t.category, // ensure category is passed if it's part of TaskSnapshot
+        category: t.category,
       })),
       scenarioDescription: scenarioDescription,
     };
@@ -76,9 +76,9 @@ export default function ScenarioPlannerPage() { // Renamed component for clarity
       <Card className="shadow-xl mt-2 md:mt-6">
         <CardHeader>
           <div className="flex items-center gap-3">
-            <RouteIcon className="h-8 w-8 text-primary" /> 
+            <PageIcon className="h-8 w-8 text-primary" /> 
             <div>
-              <CardTitle className="text-3xl font-bold">Scenario Planner & Impact Analysis</CardTitle> {/* Updated title */}
+              <CardTitle className="text-3xl font-bold">What-If Scenario Analysis</CardTitle> {/* Updated title */}
               <CardDescription className="text-md">
                 Experiment with potential changes and predict outcomes without affecting live project data.
               </CardDescription>
@@ -143,7 +143,7 @@ export default function ScenarioPlannerPage() { // Renamed component for clarity
           {prediction && !isLoadingPrediction && !predictionError && (
             <Card className="mt-6 bg-card shadow-lg border border-primary/30">
               <CardHeader>
-                <CardTitle className="text-xl text-primary">AI Predicted Impact Analysis</CardTitle> {/* Updated card title */}
+                <CardTitle className="text-xl text-primary">AI Impact Analysis for Scenario</CardTitle> {/* Updated card title */}
                 <CardDescription>Based on your scenario: "{scenarioDescription.length > 100 ? scenarioDescription.substring(0,97) + '...' : scenarioDescription}"</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">

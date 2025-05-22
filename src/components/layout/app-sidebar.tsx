@@ -24,9 +24,9 @@ import {
     CalendarDays,
     ShieldCheck,
     MessageSquareText,
-    GanttChartSquare,
+    Route, // Changed from GanttChartSquare
     MessagesSquare,
-    BarChart3 // Added icon for Reports
+    BarChart3
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -37,9 +37,9 @@ const navItems = [
   { href: '/files', label: 'Files', icon: FileArchive },
   { href: '/summary', label: 'Summary', icon: ScrollText },
   { href: '/standup-history', label: 'Standups', icon: MessageSquareText },
-  { href: '/time-travel', label: 'Time Travel', icon: GanttChartSquare },
+  { href: '/time-travel', label: 'Scenario Planner', icon: Route }, // Updated label and icon
   { href: '/team-chat', label: 'Team Chat', icon: MessagesSquare },
-  { href: '/reports', label: 'Reports', icon: BarChart3 }, // New Item for Reports
+  { href: '/reports', label: 'Reports', icon: BarChart3 },
 ];
 
 const adminNavItems = [
@@ -53,12 +53,10 @@ export function AppSidebar() {
   const getAvailableNavItems = () => {
     let items = [...navItems];
     if (user?.role === 'admin') {
-      // Find index of Reports (or a suitable item to insert after)
       const reportsIndex = items.findIndex(item => item.href === '/reports');
-      if (reportsIndex !== -1 && reportsIndex < items.length -1) { // Ensure it's not the last item already
+      if (reportsIndex !== -1 && reportsIndex < items.length -1) {
         items.splice(reportsIndex + 1, 0, ...adminNavItems);
       } else {
-        // Fallback: add admin items at the end
         items = [...items, ...adminNavItems];
       }
     }

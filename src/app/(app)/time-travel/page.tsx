@@ -5,16 +5,16 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Wand2, AlertTriangle, GanttChartSquare, HelpCircle, CalendarClock, ListTodo, Link as LinkIcon, Lightbulb } from "lucide-react";
+import { Loader2, Wand2, AlertTriangle, Route as RouteIcon, HelpCircle, CalendarClock, ListTodo, Link as LinkIcon, Lightbulb } from "lucide-react"; // Changed GanttChartSquare to RouteIcon
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useTasks } from "@/contexts/task-context";
-import type { Task } from "@/lib/types";
+import type { Task } from "@/lib/types"; // Ensure Task type is imported if needed for context, though flow uses TaskSnapshot
 import { predictTimelineImpact, type PredictTimelineImpactInput, type PredictTimelineImpactOutput } from "@/ai/flows/predict-timeline-impact-flow";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
 
-export default function TimeTravelPage() {
+export default function ScenarioPlannerPage() { // Renamed component for clarity, though file name is still time-travel
   const { tasks, isLoading: tasksLoading } = useTasks();
   const [scenarioDescription, setScenarioDescription] = useState("");
   const [prediction, setPrediction] = useState<PredictTimelineImpactOutput | null>(null);
@@ -41,6 +41,7 @@ export default function TimeTravelPage() {
         dueDate: t.dueDate,
         assignedTo: t.assignedTo,
         description: t.description,
+        category: t.category, // ensure category is passed if it's part of TaskSnapshot
       })),
       scenarioDescription: scenarioDescription,
     };
@@ -75,11 +76,11 @@ export default function TimeTravelPage() {
       <Card className="shadow-xl mt-2 md:mt-6">
         <CardHeader>
           <div className="flex items-center gap-3">
-            <GanttChartSquare className="h-8 w-8 text-primary" />
+            <RouteIcon className="h-8 w-8 text-primary" /> 
             <div>
-              <CardTitle className="text-3xl font-bold">Task Time Travel Simulation</CardTitle>
+              <CardTitle className="text-3xl font-bold">Scenario Planner & Impact Analysis</CardTitle> {/* Updated title */}
               <CardDescription className="text-md">
-                Experiment with timeline changes and predict outcomes without affecting live project data.
+                Experiment with potential changes and predict outcomes without affecting live project data.
               </CardDescription>
             </div>
           </div>
@@ -117,6 +118,12 @@ export default function TimeTravelPage() {
             Predict Impact
           </Button>
 
+          {tasksLoading && !isLoadingPrediction && (
+             <div className="flex items-center justify-center p-6 text-muted-foreground">
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading task data for simulation...
+             </div>
+          )}
+
           {isLoadingPrediction && (
             <div className="flex flex-col items-center justify-center p-8 my-4 border rounded-lg bg-muted/40">
               <Loader2 className="h-12 w-12 animate-spin text-primary mb-3" />
@@ -136,7 +143,7 @@ export default function TimeTravelPage() {
           {prediction && !isLoadingPrediction && !predictionError && (
             <Card className="mt-6 bg-card shadow-lg border border-primary/30">
               <CardHeader>
-                <CardTitle className="text-xl text-primary">AI Predicted Impact Analysis</CardTitle>
+                <CardTitle className="text-xl text-primary">AI Predicted Impact Analysis</CardTitle> {/* Updated card title */}
                 <CardDescription>Based on your scenario: "{scenarioDescription.length > 100 ? scenarioDescription.substring(0,97) + '...' : scenarioDescription}"</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -192,7 +199,7 @@ export default function TimeTravelPage() {
                       <AlertTriangle className="h-5 w-5 text-yellow-500" />
                       Key Warnings & Considerations:
                     </h4>
-                    <ScrollArea className="h-40 w-full rounded-md border p-3 bg-muted/30 mt-2">
+                     <ScrollArea className="h-40 w-full rounded-md border p-3 bg-muted/30 mt-2">
                       <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
                         {prediction.warningsAndConsiderations.map((warning, index) => (
                           <li key={index}>{warning}</li>
@@ -208,7 +215,7 @@ export default function TimeTravelPage() {
                         <Lightbulb className="h-5 w-5 text-green-500" />
                         Suggested Solutions & Mitigation Strategies:
                     </h4>
-                    <ScrollArea className="h-40 w-full rounded-md border p-3 bg-muted/30 mt-2">
+                     <ScrollArea className="h-40 w-full rounded-md border p-3 bg-muted/30 mt-2">
                       <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
                         {prediction.suggestedSolutions.map((solution, index) => (
                           <li key={index}>{solution}</li>
@@ -237,4 +244,3 @@ export default function TimeTravelPage() {
     </div>
   );
 }
-

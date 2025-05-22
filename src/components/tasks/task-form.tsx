@@ -30,7 +30,7 @@ import { suggestTaskDetails } from '@/ai/flows/suggest-task-details-flow';
 import { suggestSubtasks } from '@/ai/flows/suggest-subtasks-flow';
 import { suggestTaskPriority } from '@/ai/flows/suggest-task-priority-flow';
 import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
+// ScrollArea import removed
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle as UiCardTitle } from '@/components/ui/card';
 
@@ -284,255 +284,254 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-      <ScrollArea className="max-h-[70vh] pr-3">
-        <div className="space-y-6 p-1">
-          <div>
-            <Label htmlFor="title">Title</Label>
-            <Input id="title" {...form.register('title')} placeholder="e.g., Schedule team meeting" />
-            {form.formState.errors.title && (
-              <p className="text-sm text-red-500 mt-1">{form.formState.errors.title.message}</p>
-            )}
-          </div>
+      {/* Content that might grow and require scrolling */}
+      <div className="space-y-6 p-1">
+        <div>
+          <Label htmlFor="title">Title</Label>
+          <Input id="title" {...form.register('title')} placeholder="e.g., Schedule team meeting" />
+          {form.formState.errors.title && (
+            <p className="text-sm text-red-500 mt-1">{form.formState.errors.title.message}</p>
+          )}
+        </div>
 
-          <div className="space-y-1">
-            <Label htmlFor="description">Description</Label>
-            <Textarea id="description" {...form.register('description')} placeholder="Add more details about the task... or let AI suggest them!" />
-          </div>
-          
-          <div className="flex flex-col sm:flex-row gap-2 mt-2">
+        <div className="space-y-1">
+          <Label htmlFor="description">Description</Label>
+          <Textarea id="description" {...form.register('description')} placeholder="Add more details about the task... or let AI suggest them!" />
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-2 mt-2">
+          <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleSuggestDetails}
+              disabled={isSuggestingDetails || !form.watch('title') || isSuggestingPriority}
+              className="text-xs flex-1"
+            >
+              {isSuggestingDetails ? (
+                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+              ) : (
+                <Wand2 className="mr-1 h-3 w-3" />
+              )}
+              AI Suggest Details
+            </Button>
+        </div>
+
+        <Separator />
+          <Card className="bg-muted/20 shadow-inner">
+          <CardHeader className="pb-2 pt-4 px-4">
+            <UiCardTitle className="text-lg font-semibold flex items-center gap-2">
+              <Brain className="h-5 w-5 text-primary" />
+              AI Task Breakdown
+            </UiCardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 space-y-3">
             <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleSuggestDetails}
-                disabled={isSuggestingDetails || !form.watch('title') || isSuggestingPriority}
-                className="text-xs flex-1"
-              >
-                {isSuggestingDetails ? (
-                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                ) : (
-                  <Wand2 className="mr-1 h-3 w-3" />
-                )}
-                AI Suggest Details
-              </Button>
-          </div>
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleSuggestSubtasks}
+              disabled={isSuggestingSubtasks || !form.watch('title') || isSuggestingDetails || isSuggestingPriority}
+              className="w-full text-xs"
+            >
+              {isSuggestingSubtasks ? (
+                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+              ) : (
+                <Brain className="mr-1 h-3 w-3" />
+              )}
+              Suggest Sub-tasks / Checklist
+            </Button>
+            {isSuggestingSubtasks && (
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground p-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Generating sub-task suggestions...</span>
+              </div>
+            )}
+            {subtasksError && !isSuggestingSubtasks && (
+              <Alert variant="destructive" className="my-2">
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{subtasksError}</AlertDescription>
+              </Alert>
+            )}
+            {suggestedSubtasksList.length > 0 && !isSuggestingSubtasks && !subtasksError && (
+              <div className="mt-2 p-3 border rounded-md bg-background/50 text-sm">
+                <p className="font-medium mb-1.5 text-muted-foreground">Suggested Sub-tasks/Checklist:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  {suggestedSubtasksList.map((subtask, index) => (
+                    <li key={index}>{subtask}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {!isSuggestingSubtasks && !subtasksError && suggestedSubtasksList.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-2">
+                Enter a title and click "Suggest Sub-tasks" for AI-powered breakdown.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+        <Separator />
 
-          <Separator />
-           <Card className="bg-muted/20 shadow-inner">
-            <CardHeader className="pb-2 pt-4 px-4">
-              <UiCardTitle className="text-lg font-semibold flex items-center gap-2">
-                <Brain className="h-5 w-5 text-primary" />
-                AI Task Breakdown
-              </UiCardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-4 space-y-3">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleSuggestSubtasks}
-                disabled={isSuggestingSubtasks || !form.watch('title') || isSuggestingDetails || isSuggestingPriority}
-                className="w-full text-xs"
-              >
-                {isSuggestingSubtasks ? (
-                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                ) : (
-                  <Brain className="mr-1 h-3 w-3" />
-                )}
-                Suggest Sub-tasks / Checklist
-              </Button>
-              {isSuggestingSubtasks && (
-                <div className="flex items-center space-x-2 text-sm text-muted-foreground p-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Generating sub-task suggestions...</span>
-                </div>
-              )}
-              {subtasksError && !isSuggestingSubtasks && (
-                <Alert variant="destructive" className="my-2">
-                  <AlertTitle>Error</AlertTitle>
-                  <AlertDescription>{subtasksError}</AlertDescription>
-                </Alert>
-              )}
-              {suggestedSubtasksList.length > 0 && !isSuggestingSubtasks && !subtasksError && (
-                <div className="mt-2 p-3 border rounded-md bg-background/50 text-sm">
-                  <p className="font-medium mb-1.5 text-muted-foreground">Suggested Sub-tasks/Checklist:</p>
-                  <ul className="list-disc list-inside space-y-1">
-                    {suggestedSubtasksList.map((subtask, index) => (
-                      <li key={index}>{subtask}</li>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="status">Status</Label>
+            <Controller
+              name="status"
+              control={form.control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger id="status">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TASK_STATUSES.map(s => (
+                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                     ))}
-                  </ul>
-                </div>
+                  </SelectContent>
+                </Select>
               )}
-              {!isSuggestingSubtasks && !subtasksError && suggestedSubtasksList.length === 0 && (
-                <p className="text-xs text-muted-foreground text-center py-2">
-                  Enter a title and click "Suggest Sub-tasks" for AI-powered breakdown.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-          <Separator />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="status">Status</Label>
+            />
+          </div>
+          <div>
+            <Label htmlFor="priority">Priority</Label>
+            <div className="flex items-center gap-2">
               <Controller
-                name="status"
+                name="priority"
                 control={form.control}
                 render={({ field }) => (
                   <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger id="status">
-                      <SelectValue placeholder="Select status" />
+                    <SelectTrigger id="priority" className="flex-grow">
+                      <SelectValue placeholder="Select priority" />
                     </SelectTrigger>
                     <SelectContent>
-                      {TASK_STATUSES.map(s => (
-                        <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                      {TASK_PRIORITIES.map(p => (
+                        <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 )}
               />
-            </div>
-            <div>
-              <Label htmlFor="priority">Priority</Label>
-              <div className="flex items-center gap-2">
-                <Controller
-                  name="priority"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger id="priority" className="flex-grow">
-                        <SelectValue placeholder="Select priority" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {TASK_PRIORITIES.map(p => (
-                          <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+              <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={handleSuggestPriority}
+                  disabled={isSuggestingPriority || !form.watch('title') || isSuggestingDetails}
+                  title="AI Suggest Priority"
+                  className="p-2"
+                >
+                  {isSuggestingPriority ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4" />
                   )}
-                />
-                <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={handleSuggestPriority}
-                    disabled={isSuggestingPriority || !form.watch('title') || isSuggestingDetails}
-                    title="AI Suggest Priority"
-                    className="p-2"
-                  >
-                    {isSuggestingPriority ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-4 w-4" />
-                    )}
-                  </Button>
-              </div>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="dueDate">Due Date</Label>
-              <Controller
-                name="dueDate"
-                control={form.control}
-                render={({ field }) => (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        id="dueDate"
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !field.value && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                )}
-              />
-            </div>
-            <div>
-              <Label htmlFor="category">Category</Label>
-              <Controller
-                name="category"
-                control={form.control}
-                render={({ field }) => (
-                  <Input id="category" {...field} list="category-suggestions" placeholder="e.g., Work, Personal" />
-                )}
-              />
-              <datalist id="category-suggestions">
-                {DEFAULT_CATEGORIES.map(cat => <option key={cat} value={cat} />)}
-              </datalist>
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="assignedTo">Assign to</Label>
-            <Controller
-                name="assignedTo"
-                control={form.control}
-                render={({ field }) => (
-                  <Select
-                    onValueChange={(selectedValueFromSelect) => {
-                      if (selectedValueFromSelect === UNASSIGNED_SELECT_ITEM_VALUE) {
-                        field.onChange(UNASSIGNED_FORM_VALUE);
-                      } else {
-                        field.onChange(selectedValueFromSelect);
-                      }
-                    }}
-                    value={field.value === UNASSIGNED_FORM_VALUE || field.value === undefined ? UNASSIGNED_SELECT_ITEM_VALUE : field.value}
-                  >
-                    <SelectTrigger id="assignedTo" className="w-full">
-                      <div className="flex items-center gap-2">
-                        <UserCircle className="h-4 w-4 text-muted-foreground" />
-                        <SelectValue placeholder="Select user" />
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={UNASSIGNED_SELECT_ITEM_VALUE}><em>Unassigned</em></SelectItem>
-                      {assignableUsers.map(user => (
-                        <SelectItem key={user.id} value={user.id}>{user.name || user.email}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-          </div>
-
-          <div>
-            <Label>Files (Mock)</Label>
-            <div className="space-y-2 mt-1">
-              {currentFiles.map(file => (
-                <div key={file.id} className="flex items-center justify-between p-2 border rounded-md bg-secondary/50">
-                  <div className="flex items-center gap-2">
-                    <Paperclip className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{file.name}</span>
-                    <span className="text-xs text-muted-foreground">({(file.size / 1024).toFixed(1)} KB)</span>
-                  </div>
-                  <Button type="button" variant="ghost" size="icon" onClick={() => handleFileRemove(file.id)}>
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                  </Button>
-                </div>
-              ))}
-              <Button type="button" variant="outline" onClick={handleFileAdd} className="w-full">
-                <UploadCloud className="mr-2 h-4 w-4" /> Add Mock File
-              </Button>
+                </Button>
             </div>
           </div>
         </div>
-      </ScrollArea>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="dueDate">Due Date</Label>
+            <Controller
+              name="dueDate"
+              control={form.control}
+              render={({ field }) => (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="dueDate"
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              )}
+            />
+          </div>
+          <div>
+            <Label htmlFor="category">Category</Label>
+            <Controller
+              name="category"
+              control={form.control}
+              render={({ field }) => (
+                <Input id="category" {...field} list="category-suggestions" placeholder="e.g., Work, Personal" />
+              )}
+            />
+            <datalist id="category-suggestions">
+              {DEFAULT_CATEGORIES.map(cat => <option key={cat} value={cat} />)}
+            </datalist>
+          </div>
+        </div>
+
+        <div>
+          <Label htmlFor="assignedTo">Assign to</Label>
+          <Controller
+              name="assignedTo"
+              control={form.control}
+              render={({ field }) => (
+                <Select
+                  onValueChange={(selectedValueFromSelect) => {
+                    if (selectedValueFromSelect === UNASSIGNED_SELECT_ITEM_VALUE) {
+                      field.onChange(UNASSIGNED_FORM_VALUE);
+                    } else {
+                      field.onChange(selectedValueFromSelect);
+                    }
+                  }}
+                  value={field.value === UNASSIGNED_FORM_VALUE || field.value === undefined ? UNASSIGNED_SELECT_ITEM_VALUE : field.value}
+                >
+                  <SelectTrigger id="assignedTo" className="w-full">
+                    <div className="flex items-center gap-2">
+                      <UserCircle className="h-4 w-4 text-muted-foreground" />
+                      <SelectValue placeholder="Select user" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={UNASSIGNED_SELECT_ITEM_VALUE}><em>Unassigned</em></SelectItem>
+                    {assignableUsers.map(user => (
+                      <SelectItem key={user.id} value={user.id}>{user.name || user.email}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+        </div>
+
+        <div>
+          <Label>Files (Mock)</Label>
+          <div className="space-y-2 mt-1">
+            {currentFiles.map(file => (
+              <div key={file.id} className="flex items-center justify-between p-2 border rounded-md bg-secondary/50">
+                <div className="flex items-center gap-2">
+                  <Paperclip className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{file.name}</span>
+                  <span className="text-xs text-muted-foreground">({(file.size / 1024).toFixed(1)} KB)</span>
+                </div>
+                <Button type="button" variant="ghost" size="icon" onClick={() => handleFileRemove(file.id)}>
+                  <Trash2 className="h-4 w-4 text-red-500" />
+                </Button>
+              </div>
+            ))}
+            <Button type="button" variant="outline" onClick={handleFileAdd} className="w-full">
+              <UploadCloud className="mr-2 h-4 w-4" /> Add Mock File
+            </Button>
+          </div>
+        </div>
+      </div> {/* End of scrollable content div */}
 
       <div className="flex justify-end gap-2 pt-4 border-t mt-auto">
         <Button type="button" variant="outline" onClick={() => onOpenChange?.(false)}>

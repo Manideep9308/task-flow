@@ -51,7 +51,7 @@ export interface StandupReportItem {
   userName: string;
   didYesterday: string;
   doingToday: string;
-  blockers: string;
+  blockers?: string; // Made optional
 }
 
 export interface StandupSummary {
@@ -90,4 +90,13 @@ export interface TaskSnapshot {
 export interface PredictTimelineImpactInput {
   currentTasks: TaskSnapshot[];
   scenarioDescription: string;
+}
+
+// For Team Chat
+export interface ChatMessage {
+  id: string;
+  userId: string;
+  userName: string;
+  text: string;
+  timestamp: string; // ISO string
 }

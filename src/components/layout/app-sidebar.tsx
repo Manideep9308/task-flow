@@ -13,18 +13,19 @@ import {
   SidebarMenuButton,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { 
-    ClipboardCheck, 
-    LayoutDashboard, 
-    ListChecks, 
-    FileArchive, 
-    ScrollText, 
-    Settings, 
-    LogOut, 
-    CalendarDays, 
+import {
+    ClipboardCheck,
+    LayoutDashboard,
+    ListChecks,
+    FileArchive,
+    ScrollText,
+    Settings,
+    LogOut,
+    CalendarDays,
     ShieldCheck,
     MessageSquareText,
-    GanttChartSquare // Added icon for Time Travel
+    GanttChartSquare,
+    MessagesSquare // Added icon for Team Chat
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -35,7 +36,8 @@ const navItems = [
   { href: '/files', label: 'Files', icon: FileArchive },
   { href: '/summary', label: 'Summary', icon: ScrollText },
   { href: '/standup-history', label: 'Standups', icon: MessageSquareText },
-  { href: '/time-travel', label: 'Time Travel', icon: GanttChartSquare }, // New Item for Time Travel
+  { href: '/time-travel', label: 'Time Travel', icon: GanttChartSquare },
+  { href: '/team-chat', label: 'Team Chat', icon: MessagesSquare }, // New Item for Team Chat
 ];
 
 const adminNavItems = [
@@ -46,7 +48,24 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
-  const availableNavItems = user?.role === 'admin' ? [...navItems, ...adminNavItems] : navItems;
+  const getAvailableNavItems = () => {
+    let items = [...navItems];
+    if (user?.role === 'admin') {
+      // Find index of Time Travel
+      const timeTravelIndex = items.findIndex(item => item.href === '/time-travel');
+      if (timeTravelIndex !== -1) {
+        // Insert Admin Panel after Time Travel
+        items.splice(timeTravelIndex + 1, 0, ...adminNavItems);
+      } else {
+        // Fallback: add admin items at the end if Time Travel isn't found
+        items = [...items, ...adminNavItems];
+      }
+    }
+    return items;
+  };
+  
+  const availableNavItems = getAvailableNavItems();
+
 
   return (
     <Sidebar side="left" variant="sidebar" collapsible="icon">

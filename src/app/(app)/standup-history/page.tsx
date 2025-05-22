@@ -25,6 +25,7 @@ export default function StandupHistoryPage() {
   const [isGeneratingTodaysSummary, setIsGeneratingTodaysSummary] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
 
+  // Helper function to format summary text
   const formatSummaryTextForDisplay = (text: string): string => {
     if (!text) return "";
     return text
@@ -37,9 +38,8 @@ export default function StandupHistoryPage() {
     setGenerationError(null);
     setTodaysSummary(null);
 
-    // Create mock input for a few users
     const mockReports: StandupReportItem[] = [];
-    const usersToReport = assignableUsers.slice(0, 3); // Take first 3 users for demo
+    const usersToReport = assignableUsers.slice(0, 3); 
 
     usersToReport.forEach(user => {
       const userTasks: Task[] = tasks.filter(t => t.assignedTo === user.id);
@@ -51,7 +51,7 @@ export default function StandupHistoryPage() {
         const recentTask = userTasks.sort((a,b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0];
         didYesterday = `Focused on "${recentTask.title}".`;
         doingToday = `Will continue working on "${recentTask.title}" and other assignments.`;
-        if (recentTask.status === 'inprogress' && Math.random() > 0.7) { // Randomly add a blocker
+        if (recentTask.status === 'inprogress' && Math.random() > 0.7) { 
           blockers = `Facing a minor challenge with "${recentTask.title}".`;
         }
       } else {
@@ -77,7 +77,6 @@ export default function StandupHistoryPage() {
             blockers: 'None reported',
         });
     }
-
 
     const input: GenerateStandupSummaryInput = {
       reports: mockReports,
@@ -161,6 +160,7 @@ export default function StandupHistoryPage() {
             )}
           </CardHeader>
           <CardContent>
+            {/* Using dangerouslySetInnerHTML to render formatted summary */}
             <div 
               className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap"
               dangerouslySetInnerHTML={{ __html: formatSummaryTextForDisplay(todaysSummary.summaryText) }} 
@@ -182,7 +182,7 @@ export default function StandupHistoryPage() {
           </CardContent>
         </Card>
       ) : (
-        <ScrollArea className="h-[calc(100vh-26rem)]"> {/* Adjusted height based on potential top card */}
+        <ScrollArea className="h-[calc(100vh-26rem)]"> 
           <div className="space-y-6">
             {historicalStandupSummaries.sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime()).map((summary) => (
               <Card key={summary.id} className="shadow-md hover:shadow-lg transition-shadow">
@@ -201,6 +201,7 @@ export default function StandupHistoryPage() {
                   )}
                 </CardHeader>
                 <CardContent>
+                  {/* Using dangerouslySetInnerHTML to render formatted summary */}
                   <div 
                     className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap"
                     dangerouslySetInnerHTML={{ __html: formatSummaryTextForDisplay(summary.summaryText) }} 
@@ -215,3 +216,4 @@ export default function StandupHistoryPage() {
   );
 }
 
+    

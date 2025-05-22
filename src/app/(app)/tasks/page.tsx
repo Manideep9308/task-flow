@@ -27,7 +27,7 @@ function TasksPageContent() {
   };
 
   useEffect(() => {
-    if (tasksLoading) return; // Don't try to open modal if tasks are not loaded yet
+    if (tasksLoading) return; 
 
     const taskIdToOpen = searchParams.get('openTask');
     if (taskIdToOpen) {
@@ -36,10 +36,10 @@ function TasksPageContent() {
         handleEditTask(taskToEdit);
       }
     }
-  }, [searchParams, tasks, tasksLoading]); // Add tasksLoading dependency
+  }, [searchParams, tasks, tasksLoading]);
 
   return (
-    <div className="container mx-auto">
+    <div className="px-4 sm:px-6"> {/* Changed from container mx-auto */}
       <h1 className="text-3xl font-bold mb-6 mt-2 md:mt-6">Task List</h1>
       <TaskDataTable tasks={tasks} onEditTask={handleEditTask} />
       
@@ -63,7 +63,7 @@ function TasksPageContent() {
 // Wrap TasksPageContent with Suspense for useSearchParams
 export default function TasksPage() {
   return (
-    <Suspense fallback={<div>Loading task details...</div>}>
+    <Suspense fallback={<div className="px-4 sm:px-6 pt-6">Loading task details...</div>}>
       <TasksPageContent />
     </Suspense>
   );

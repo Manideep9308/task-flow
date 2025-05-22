@@ -30,7 +30,6 @@ import { suggestTaskDetails } from '@/ai/flows/suggest-task-details-flow';
 import { suggestSubtasks } from '@/ai/flows/suggest-subtasks-flow';
 import { suggestTaskPriority } from '@/ai/flows/suggest-task-priority-flow';
 import { Separator } from '@/components/ui/separator';
-// ScrollArea import removed
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle as UiCardTitle } from '@/components/ui/card';
 
@@ -177,7 +176,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
     }
     setIsSuggestingPriority(true);
     try {
-      const suggestion = await suggestTaskPriority({ title, taskDescription: description, currentPriority, dueDate });
+      const suggestion = await suggestTaskPriority({ taskTitle: title, taskDescription: description, currentPriority, dueDate });
       toast({
         title: 'AI Priority Suggestion',
         description: (
@@ -197,7 +196,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
             </Button>
           </div>
         ),
-        duration: 10000,
+        duration: 10000, // Longer duration for user to read and act
       });
     } catch (error) {
       console.error('Error suggesting task priority:', error);
@@ -284,8 +283,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-      {/* Content that might grow and require scrolling */}
-      <div className="space-y-6 p-1">
+      <div className="space-y-6 p-1"> 
         <div>
           <Label htmlFor="title">Title</Label>
           <Input id="title" {...form.register('title')} placeholder="e.g., Schedule team meeting" />
@@ -316,7 +314,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
               AI Suggest Details
             </Button>
         </div>
-
+        
         <Separator />
           <Card className="bg-muted/20 shadow-inner">
           <CardHeader className="pb-2 pt-4 px-4">
@@ -371,6 +369,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
           </CardContent>
         </Card>
         <Separator />
+
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -531,7 +530,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
             </Button>
           </div>
         </div>
-      </div> {/* End of scrollable content div */}
+      </div>
 
       <div className="flex justify-end gap-2 pt-4 border-t mt-auto">
         <Button type="button" variant="outline" onClick={() => onOpenChange?.(false)}>

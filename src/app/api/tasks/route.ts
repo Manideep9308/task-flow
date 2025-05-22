@@ -2,7 +2,7 @@
 // src/app/api/tasks/route.ts
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import type { Task, TaskStatus } from '@/lib/types';
+import type { Task, TaskStatus, Comment } from '@/lib/types'; // Added Comment
 import { getAllTasks, createTask as createTaskInDB } from '@/lib/server-task-store';
 
 export async function GET(request: NextRequest) {
@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const taskData = (await request.json()) as Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'order' | 'status'> & { status?: TaskStatus };
+    // Ensure taskData can include comments
+    const taskData = (await request.json()) as Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'order' | 'status' | 'comments'> & { status?: TaskStatus; comments?: Comment[] };
 
     if (!taskData.title) {
       return NextResponse.json({ message: 'Title is required' }, { status: 400 });

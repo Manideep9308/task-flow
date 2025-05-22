@@ -1,7 +1,7 @@
 
 "use client";
 
-import type { Task, TaskPriority, TaskStatus, TaskFile } from '@/lib/types';
+import type { Task, TaskPriority, TaskStatus, TaskFile, Comment } from '@/lib/types';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -18,9 +18,9 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Paperclip, Trash2, UploadCloud, UserCircle, Wand2, Loader2, Brain, Sparkles } from 'lucide-react';
+import { CalendarIcon, Paperclip, Trash2, UploadCloud, UserCircle, Wand2, Loader2, Brain, Sparkles, MessageSquare, Send } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { cn, getInitials } from '@/lib/utils';
 import { TASK_PRIORITIES, TASK_STATUSES, DEFAULT_CATEGORIES } from '@/lib/constants';
 import { useTasks } from '@/contexts/task-context';
 import { useAuth } from '@/contexts/auth-context';
@@ -32,6 +32,8 @@ import { suggestTaskPriority } from '@/ai/flows/suggest-task-priority-flow';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle as UiCardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { v4 as uuidv4 } from 'uuid';
 
 
 const taskFormSchema = z.object({
@@ -53,6 +55,13 @@ const taskFormSchema = z.object({
     size: z.number(),
     type: z.string(),
   })).optional(),
+  comments: z.array(z.object({
+    id: z.string(),
+    userId: z.string(),
+    userName: z.string(),
+    text: z.string(),
+    timestamp: z.string(),
+  })).optional(),
 });
 
 type TaskFormValues = z.infer<typeof taskFormSchema>;
@@ -67,9 +76,12 @@ const UNASSIGNED_SELECT_ITEM_VALUE = "__UNASSIGNED__";
 
 export function TaskForm({ task, onOpenChange }: TaskFormProps) {
   const { addTask, updateTask } = useTasks();
-  const { assignableUsers } = useAuth();
+  const { user, assignableUsers } = useAuth();
   const { toast } = useToast();
   const [currentFiles, setCurrentFiles] = useState<TaskFile[]>(task?.files || []);
+  const [currentComments, setCurrentComments] = useState<Comment[]>(task?.comments || []);
+  const [newCommentText, setNewCommentText] = useState("");
+
   const [isSuggestingDetails, setIsSuggestingDetails] = useState(false);
   const [isSuggestingPriority, setIsSuggestingPriority] = useState(false);
 
@@ -89,6 +101,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
       category: task?.category || '',
       assignedTo: task?.assignedTo || UNASSIGNED_FORM_VALUE,
       files: task?.files || [],
+      comments: task?.comments || [],
     },
   });
 
@@ -103,9 +116,11 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
         category: task.category || '',
         assignedTo: task.assignedTo || UNASSIGNED_FORM_VALUE,
         files: task.files || [],
+        comments: task.comments || [],
       });
       setCurrentFiles(task.files || []);
-      setSuggestedSubtasksList([]); 
+      setCurrentComments(task.comments || []);
+      setSuggestedSubtasksList([]);
       setSubtasksError(null);
     } else {
       form.reset({
@@ -117,8 +132,10 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
         category: '',
         assignedTo: UNASSIGNED_FORM_VALUE,
         files: [],
+        comments: [],
       });
       setCurrentFiles([]);
+      setCurrentComments([]);
       setSuggestedSubtasksList([]);
       setSubtasksError(null);
     }
@@ -222,7 +239,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
 
     setIsSuggestingSubtasks(true);
     setSubtasksError(null);
-    setSuggestedSubtasksList([]); 
+    setSuggestedSubtasksList([]);
     try {
       const result = await suggestSubtasks({ taskTitle, taskDescription });
       if (result.suggestedSubtasks && result.suggestedSubtasks.length > 0) {
@@ -244,12 +261,27 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
     }
   };
 
+  const handleAddComment = () => {
+    if (!newCommentText.trim() || !user) return;
+    const newComment: Comment = {
+      id: uuidv4(),
+      userId: user.id,
+      userName: user.name || user.email,
+      text: newCommentText.trim(),
+      timestamp: new Date().toISOString(),
+    };
+    setCurrentComments(prev => [...prev, newComment]);
+    setNewCommentText(""); // Clear input after adding
+  };
+
+
   const onSubmit = (data: TaskFormValues) => {
     const taskData = {
       ...data,
       dueDate: data.dueDate ? format(data.dueDate, 'yyyy-MM-dd') : undefined,
       assignedTo: data.assignedTo === UNASSIGNED_FORM_VALUE ? undefined : data.assignedTo,
       files: currentFiles,
+      comments: currentComments, // Include current comments
     };
 
     if (task && task.id) {
@@ -262,17 +294,19 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
     onOpenChange?.(false);
     form.reset();
     setCurrentFiles([]);
+    setCurrentComments([]);
     setSuggestedSubtasksList([]);
     setSubtasksError(null);
+    setNewCommentText("");
   };
 
   const handleFileAdd = () => {
     const newFile: TaskFile = {
       id: `file-${Date.now()}`,
       name: `document-${currentFiles.length + 1}.pdf`,
-      url: '#', 
-      size: Math.floor(Math.random() * (2048 * 1024 - 100 * 1024 + 1)) + (100 * 1024), 
-      type: 'application/pdf', 
+      url: '#',
+      size: Math.floor(Math.random() * (2048 * 1024 - 100 * 1024 + 1)) + (100 * 1024),
+      type: 'application/pdf',
     };
     setCurrentFiles(prev => [...prev, newFile]);
   };
@@ -283,7 +317,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-      <div className="space-y-6 p-1"> 
+      <div className="space-y-6 p-1">
         <div>
           <Label htmlFor="title">Title</Label>
           <Input id="title" {...form.register('title')} placeholder="e.g., Schedule team meeting" />
@@ -296,7 +330,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
           <Label htmlFor="description">Description</Label>
           <Textarea id="description" {...form.register('description')} placeholder="Add more details about the task... or let AI suggest them!" />
         </div>
-        
+
         <div className="flex flex-col sm:flex-row gap-2 mt-2">
           <Button
               type="button"
@@ -314,9 +348,9 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
               AI Suggest Details
             </Button>
         </div>
-        
         <Separator />
-          <Card className="bg-muted/20 shadow-inner">
+
+        <Card className="bg-muted/20 shadow-inner">
           <CardHeader className="pb-2 pt-4 px-4">
             <UiCardTitle className="text-lg font-semibold flex items-center gap-2">
               <Brain className="h-5 w-5 text-primary" />
@@ -352,7 +386,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
               </Alert>
             )}
             {suggestedSubtasksList.length > 0 && !isSuggestingSubtasks && !subtasksError && (
-              <div className="mt-2 p-3 border rounded-md bg-background/50 text-sm">
+              <div className="mt-2 p-3 border rounded-md bg-background/50 text-sm max-h-40 overflow-y-auto">
                 <p className="font-medium mb-1.5 text-muted-foreground">Suggested Sub-tasks/Checklist:</p>
                 <ul className="list-disc list-inside space-y-1">
                   {suggestedSubtasksList.map((subtask, index) => (
@@ -428,7 +462,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
             </div>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="dueDate">Due Date</Label>
@@ -530,7 +564,64 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
             </Button>
           </div>
         </div>
+
+        {task && task.id && ( // Only show comments section if editing an existing task
+          <>
+            <Separator />
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-primary" /> Comments
+              </h3>
+              <div className="space-y-3 max-h-60 overflow-y-auto pr-2 border rounded-md p-3 bg-muted/20">
+                {currentComments.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-2">No comments yet.</p>
+                )}
+                {currentComments.map(comment => (
+                  <Card key={comment.id} className="bg-background shadow-sm">
+                    <CardContent className="p-3">
+                      <div className="flex items-start gap-2.5">
+                        <Avatar className="h-8 w-8 text-xs">
+                          <AvatarFallback>{getInitials(comment.userName)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium">{comment.userName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {format(parseISO(comment.timestamp), "MMM d, yyyy h:mm a")}
+                            </p>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-0.5 whitespace-pre-wrap">{comment.text}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              <div className="flex items-start gap-2">
+                <Textarea
+                  placeholder="Add a comment..."
+                  value={newCommentText}
+                  onChange={(e) => setNewCommentText(e.target.value)}
+                  rows={2}
+                  className="flex-grow"
+                  disabled={!user}
+                />
+                <Button
+                  type="button"
+                  onClick={handleAddComment}
+                  disabled={!newCommentText.trim() || !user}
+                  className="self-end"
+                  size="icon"
+                  title="Add Comment"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
+
 
       <div className="flex justify-end gap-2 pt-4 border-t mt-auto">
         <Button type="button" variant="outline" onClick={() => onOpenChange?.(false)}>

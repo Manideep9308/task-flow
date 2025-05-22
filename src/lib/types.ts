@@ -10,6 +10,14 @@ export interface TaskFile {
   type: string; // MIME type
 }
 
+export interface Comment {
+  id: string;
+  userId: string;
+  userName: string;
+  text: string;
+  timestamp: string; // ISO string
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -23,13 +31,14 @@ export interface Task {
   files?: TaskFile[];
   order: number; // For maintaining order within Kanban columns
   assignedTo?: string; // User ID of the assignee
+  comments?: Comment[];
 }
 
 export type UserRole = 'admin' | 'member';
 
 // Basic User type for mock authentication
 export interface User {
-  id: string; 
+  id: string;
   email: string;
   name?: string;
   role?: UserRole; // Add role property
@@ -65,6 +74,7 @@ export interface PredictTimelineImpactOutput {
   predictedCompletionDate?: string;
   affectedTasks?: AffectedTask[];
   warningsAndConsiderations?: string[];
+  suggestedSolutions?: string[];
 }
 
 export interface TaskSnapshot {

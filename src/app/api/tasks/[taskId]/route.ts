@@ -2,7 +2,7 @@
 // src/app/api/tasks/[taskId]/route.ts
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import type { Task } from '@/lib/types';
+import type { Task, Comment } from '@/lib/types'; // Added Comment
 import { getTaskById, updateTaskInDB, deleteTaskFromDB } from '@/lib/server-task-store';
 
 interface Params {
@@ -27,6 +27,7 @@ export async function GET(request: NextRequest, { params }: Params) {
 export async function PUT(request: NextRequest, { params }: Params) {
   try {
     const { taskId } = params;
+    // Ensure updates can include the comments array
     const updates = (await request.json()) as Partial<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>>;
 
     const updatedTask = updateTaskInDB(taskId, updates);

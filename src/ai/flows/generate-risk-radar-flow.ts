@@ -24,7 +24,7 @@ const TaskSnapshotSchema = z.object({
   category: z.string().optional(),
 });
 
-export const RiskRadarInputSchema = z.object({
+const RiskRadarInputSchema = z.object({
   tasks: z.array(TaskSnapshotSchema).describe("A list of all current tasks for the project."),
 });
 export type RiskRadarInput = z.infer<typeof RiskRadarInputSchema>;
@@ -37,7 +37,7 @@ const RiskItemSchema = z.object({
 });
 export type RiskItem = z.infer<typeof RiskItemSchema>;
 
-export const RiskRadarOutputSchema = z.object({
+const RiskRadarOutputSchema = z.object({
   risks: z.array(RiskItemSchema).max(3).describe("A list of the top 2-3 most critical risks identified. If no significant risks, this can be an empty array."),
 });
 export type RiskRadarOutput = z.infer<typeof RiskRadarOutputSchema>;
@@ -94,3 +94,4 @@ const generateRiskRadarFlow = ai.defineFlow(
     return output;
   }
 );
+

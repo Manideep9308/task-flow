@@ -1,5 +1,5 @@
 
-"use client"; // Required for useEffect and useRouter
+"use client"; 
 
 import { useEffect, type ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -9,6 +9,7 @@ import { AppSidebar } from "@/components/layout/app-sidebar";
 import { TaskProvider } from "@/contexts/task-context";
 import { useAuth } from "@/contexts/auth-context";
 import { Loader2 } from 'lucide-react';
+import { AppAssistant } from '@/components/assistant/app-assistant'; // Import AppAssistant
 
 export default function AppLayout({
   children,
@@ -50,11 +51,11 @@ export default function AppLayout({
           <div className="flex flex-col flex-1 print:pl-0 md:peer-data-[state=expanded]:pl-[var(--sidebar-width)] md:peer-data-[state=collapsed]:pl-[var(--sidebar-width-icon)] transition-[padding-left] duration-200 ease-linear">
             <AppHeader /> {/* Sticky, h-16 (4rem), z-30 */}
             
-            {/* Main content area: pt-16 to offset header, overflow-y-auto for scrolling. Horizontal padding removed. */}
             <main className="flex-1 pt-16 overflow-y-auto pb-4 sm:pb-6">
               {children}
             </main>
           </div>
+          {user && <AppAssistant />} {/* Add AppAssistant here, only if user is logged in */}
         </div>
       </SidebarProvider>
     </TaskProvider>

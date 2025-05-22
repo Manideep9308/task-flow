@@ -10,4 +10,5 @@ import '@/ai/flows/suggest-subtasks-flow.ts';
 import '@/ai/flows/suggest-task-priority-flow.ts';
 import '@/ai/flows/suggest-chat-replies-flow.ts'; 
 import '@/ai/flows/generate-chat-highlights-flow.ts'; 
-import '@/ai/flows/generate-project-health-report-flow.ts'; // Added new flow
+import '@/ai/flows/generate-project-health-report-flow.ts';
+import '@/ai/flows/app-assistant-flow.ts'; // Added new assistant flow

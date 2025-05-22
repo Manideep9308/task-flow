@@ -148,3 +148,10 @@ export interface ProjectHealthReport {
 }
 export type GenerateProjectHealthReportOutput = ProjectHealthReport;
 
+// For App Assistant
+export interface AssistantMessage {
+  id: string;
+  sender: 'user' | 'assistant';
+  text: string;
+  timestamp: string;
+}

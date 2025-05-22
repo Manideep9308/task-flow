@@ -2,9 +2,9 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ShieldCheck, Users, Settings, UserCircle, Edit3, Paintbrush, AlertTriangle, Search, Info } from "lucide-react"; // Added Info icon
+import { ShieldCheck, Users, Settings, UserCircle, Edit3, Paintbrush, AlertTriangle, Search, Info, Send, MailPlus } from "lucide-react"; // Added Info, Send, MailPlus icons
 import { useAuth } from "@/contexts/auth-context";
 import { getInitials } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +29,8 @@ import {
 } from "@/components/ui/select";
 import type { User, UserRole } from "@/lib/types";
 import { Switch } from "@/components/ui/switch";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Added Alert components
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast"; // Added useToast
 
 const ROLES_AVAILABLE: { value: UserRole; label: string }[] = [
   { value: 'admin', label: 'Admin' },
@@ -42,8 +43,15 @@ const MOCK_THEMES = [
   { value: 'dark', label: 'Dark Mode' },
 ];
 
+interface MockSentInvitation {
+  email: string;
+  role: UserRole;
+  sentAt: Date;
+}
+
 export default function AdminPage() {
   const { assignableUsers, updateUserRole } = useAuth();
+  const { toast } = useToast();
   const [isEditRoleDialogOpen, setIsEditRoleDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [selectedRole, setSelectedRole] = useState<UserRole | undefined>(undefined);
@@ -51,6 +59,10 @@ export default function AdminPage() {
 
   const [selectedMockTheme, setSelectedMockTheme] = useState<string>('neon');
   const [isMaintenanceModeEnabled, setIsMaintenanceModeEnabled] = useState(false);
+
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<UserRole>('member');
+  const [mockSentInvitations, setMockSentInvitations] = useState<MockSentInvitation[]>([]);
 
   const handleOpenEditRoleDialog = (user: User) => {
     setEditingUser(user);
@@ -64,6 +76,28 @@ export default function AdminPage() {
     }
     setIsEditRoleDialogOpen(false);
     setEditingUser(null);
+  };
+
+  const handleSendInvitation = () => {
+    if (!inviteEmail.trim() || !/\S+@\S+\.\S+/.test(inviteEmail)) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Email",
+        description: "Please enter a valid email address to send an invitation.",
+      });
+      return;
+    }
+    const newInvitation: MockSentInvitation = {
+      email: inviteEmail,
+      role: inviteRole,
+      sentAt: new Date(),
+    };
+    setMockSentInvitations(prev => [newInvitation, ...prev]);
+    toast({
+      title: "Mock Invitation Sent",
+      description: `An invitation has been 'sent' to ${inviteEmail} for the role of ${inviteRole}. (This is a mock feature).`,
+    });
+    setInviteEmail(""); // Clear input after sending
   };
 
   const filteredUsers = assignableUsers.filter(user => {
@@ -147,6 +181,62 @@ export default function AdminPage() {
             </Card>
 
             <div className="space-y-6 col-span-1">
+              <Card className="hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <MailPlus className="h-5 w-5 text-primary" />
+                    Invite Team Members
+                  </CardTitle>
+                  <CardDescription>Send invitations to new team members (Mock).</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="invite-email">Email Address</Label>
+                    <Input
+                      id="invite-email"
+                      type="email"
+                      placeholder="new.member@example.com"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="invite-role">Assign Role</Label>
+                    <Select value={inviteRole} onValueChange={(value) => setInviteRole(value as UserRole)}>
+                      <SelectTrigger id="invite-role">
+                        <SelectValue placeholder="Select a role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ROLES_AVAILABLE.map(roleOpt => (
+                          <SelectItem key={roleOpt.value} value={roleOpt.value}>
+                            {roleOpt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={handleSendInvitation} className="w-full">
+                    <Send className="mr-2 h-4 w-4" /> Send Invitation (Mock)
+                  </Button>
+                  {mockSentInvitations.length > 0 && (
+                    <div className="mt-4 pt-3 border-t">
+                      <h4 className="text-sm font-medium text-muted-foreground mb-2">Recently Invited (Mock):</h4>
+                      <ScrollArea className="h-[100px] text-xs">
+                        <ul className="space-y-1">
+                          {mockSentInvitations.map((inv, index) => (
+                            <li key={index} className="flex justify-between items-center p-1 bg-muted/20 rounded-sm">
+                              <span>{inv.email} ({inv.role})</span>
+                              <span className="text-muted-foreground/70">{inv.sentAt.toLocaleTimeString()}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </ScrollArea>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+
               <Card className="hover:shadow-md transition-shadow">
                 <CardHeader>
                   <CardTitle className="text-xl flex items-center gap-2">

@@ -4,7 +4,8 @@
 import { TaskDataTable } from '@/components/tasks/task-data-table';
 import { useTasks } from '@/contexts/task-context';
 import type { Task } from '@/lib/types';
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Dialog,
   DialogContent,
@@ -14,15 +15,28 @@ import {
 } from '@/components/ui/dialog';
 import { TaskForm } from '@/components/tasks/task-form';
 
-export default function TasksPage() {
-  const { tasks } = useTasks();
+function TasksPageContent() {
+  const { tasks, isLoading: tasksLoading } = useTasks();
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const searchParams = useSearchParams();
 
   const handleEditTask = (task: Task) => {
     setEditingTask(task);
     setIsEditModalOpen(true);
   };
+
+  useEffect(() => {
+    if (tasksLoading) return; // Don't try to open modal if tasks are not loaded yet
+
+    const taskIdToOpen = searchParams.get('openTask');
+    if (taskIdToOpen) {
+      const taskToEdit = tasks.find(task => task.id === taskIdToOpen);
+      if (taskToEdit) {
+        handleEditTask(taskToEdit);
+      }
+    }
+  }, [searchParams, tasks, tasksLoading]); // Add tasksLoading dependency
 
   return (
     <div className="container mx-auto">
@@ -43,5 +57,14 @@ export default function TasksPage() {
         </Dialog>
       )}
     </div>
+  );
+}
+
+// Wrap TasksPageContent with Suspense for useSearchParams
+export default function TasksPage() {
+  return (
+    <Suspense fallback={<div>Loading task details...</div>}>
+      <TasksPageContent />
+    </Suspense>
   );
 }

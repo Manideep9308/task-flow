@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function StandupHistoryPage() {
-  const { tasks } = useTasks();
+  const { tasks } = useTasks(); // Get all tasks for linking
   const { assignableUsers } = useAuth();
 
   const [todaysSummary, setTodaysSummary] = useState<StandupSummary | null>(null);
@@ -26,13 +26,27 @@ export default function StandupHistoryPage() {
     [...mockStandupSummaries].sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime())
   );
 
-  const formatSummaryTextForDisplay = (text: string | undefined | null): string => {
+  const formatSummaryTextForDisplay = (text: string | undefined | null, allTasks: Task[]): string => {
     if (!text) return "";
-    // Convert markdown-like bold to <strong> and newlines to <br />
-    // Emojis should render naturally if they are part of the text.
-    return text
+    
+    let formattedText = text
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
       .replace(/\n/g, '<br />'); 
+
+    // Attempt to link task titles
+    // Sort tasks by title length (descending) to match longer titles first
+    const sortedTasks = [...allTasks].sort((a, b) => b.title.length - a.title.length);
+    sortedTasks.forEach(task => {
+      if (task.title) {
+        // Regex to match whole word, case insensitive
+        const titleRegex = new RegExp(`\\b(${task.title.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})\\b`, 'gi');
+        formattedText = formattedText.replace(titleRegex, (match) => 
+          `<a href="/tasks?openTask=${task.id}" class="text-primary hover:underline">${match}</a>`
+        );
+      }
+    });
+    
+    return formattedText;
   };
 
   const handleGenerateTodaysMockSummary = async () => {
@@ -66,7 +80,7 @@ export default function StandupHistoryPage() {
           }
         } else {
           const todoTask = userTasks.find(t => t.status === 'todo');
-          doingToday = todoTask ? `Planning to start "${todoTask.title}".` : "Planning to pick up new tasks.";
+          doingToday = todoTask ? `Planning to start "${todoTask.title}".` : "Planning to pick up new tasks from the backlog.";
         }
 
       } else {
@@ -181,14 +195,14 @@ export default function StandupHistoryPage() {
           <CardContent>
             <div 
               className="prose prose-sm dark:prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: formatSummaryTextForDisplay(todaysSummary.summaryText) }} 
+              dangerouslySetInnerHTML={{ __html: formatSummaryTextForDisplay(todaysSummary.summaryText, tasks) }} 
             />
           </CardContent>
         </Card>
       )}
       
       <CardTitle className="text-2xl mb-4 mt-8">Historical Summaries</CardTitle>
-      {displayedHistoricalSummaries.length === 0 && !todaysSummary ? ( // Condition to show only if no historical and no today's summary
+      {displayedHistoricalSummaries.length === 0 && !todaysSummary ? (
         <Card>
           <CardHeader>
             <CardTitle>No Standup Summaries Yet</CardTitle>
@@ -203,7 +217,6 @@ export default function StandupHistoryPage() {
         <ScrollArea className="h-[calc(100vh-30rem)]">
           <div className="space-y-6">
             {displayedHistoricalSummaries.map((summary) => (
-              // Don't render today's summary again if it's already shown prominently
               (todaysSummary && todaysSummary.id === summary.id && !generationError && !isGeneratingTodaysSummary) ? null : (
                 <Card key={summary.id} className="shadow-md hover:shadow-lg transition-shadow">
                   <CardHeader>
@@ -223,7 +236,7 @@ export default function StandupHistoryPage() {
                   <CardContent>
                     <div 
                       className="prose prose-sm dark:prose-invert max-w-none"
-                      dangerouslySetInnerHTML={{ __html: formatSummaryTextForDisplay(summary.summaryText) }} 
+                      dangerouslySetInnerHTML={{ __html: formatSummaryTextForDisplay(summary.summaryText, tasks) }} 
                     />
                   </CardContent>
                 </Card>

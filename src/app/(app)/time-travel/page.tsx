@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Wand2, AlertTriangle, HelpCircle as PageIcon, CalendarClock, ListTodo, Link as LinkIcon, Lightbulb } from "lucide-react"; // Changed icon for the page
+import { Loader2, Wand2, AlertTriangle, HelpCircle as PageIcon, CalendarClock, ListTodo, Link as LinkIcon, Lightbulb, HelpCircle } from "lucide-react"; // Added HelpCircle here
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useTasks } from "@/contexts/task-context";
 import type { Task } from "@/lib/types";
@@ -244,3 +244,4 @@ export default function WhatIfAnalyzerPage() { // Renamed component
     </div>
   );
 }
+

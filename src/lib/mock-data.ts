@@ -24,7 +24,6 @@ export const mockTasks: Task[] = [
     order: 0,
     assignedTo: mockUserAliceId,
     imageUrl: 'https://placehold.co/600x400.png',
-    data-ai-hint: 'website design'
   },
   {
     id: 'task-2',
@@ -129,3 +128,4 @@ export const mockStandupSummaries: StandupSummary[] = [
 `,
   },
 ];
+

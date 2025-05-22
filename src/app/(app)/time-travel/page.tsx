@@ -188,7 +188,10 @@ export default function TimeTravelPage() {
 
                 {prediction.warningsAndConsiderations && prediction.warningsAndConsiderations.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-lg mt-4">Key Warnings & Considerations:</h4>
+                    <h4 className="font-semibold text-lg mt-4 flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                      Key Warnings & Considerations:
+                    </h4>
                     <ScrollArea className="h-40 w-full rounded-md border p-3 bg-muted/30 mt-2">
                       <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
                         {prediction.warningsAndConsiderations.map((warning, index) => (
@@ -202,7 +205,7 @@ export default function TimeTravelPage() {
                 {prediction.suggestedSolutions && prediction.suggestedSolutions.length > 0 && (
                   <div>
                     <h4 className="font-semibold text-lg mt-4 flex items-center gap-2">
-                        <Lightbulb className="h-5 w-5 text-muted-foreground" />
+                        <Lightbulb className="h-5 w-5 text-green-500" />
                         Suggested Solutions & Mitigation Strategies:
                     </h4>
                     <ScrollArea className="h-40 w-full rounded-md border p-3 bg-muted/30 mt-2">

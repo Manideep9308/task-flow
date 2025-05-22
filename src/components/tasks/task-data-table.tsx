@@ -143,7 +143,7 @@ export function TaskDataTable({ tasks, onEditTask }: TaskDataTableProps) {
     <div className="w-full">
       <div className="flex items-center py-4 gap-4">
         <Input
-          placeholder="Filter tasks..."
+          placeholder="Filter by keyword or ask about tasks (e.g., 'high priority for Alice')..."
           value={filter}
           onChange={(event) => setFilter(event.target.value)}
           className="max-w-sm"
@@ -299,3 +299,4 @@ export function TaskDataTable({ tasks, onEditTask }: TaskDataTableProps) {
 function Card(props: React.HTMLAttributes<HTMLDivElement>) {
   return <div className="rounded-lg border bg-card text-card-foreground shadow-sm" {...props} />;
 }
+

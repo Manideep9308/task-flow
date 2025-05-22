@@ -1,7 +1,7 @@
 
 // In-memory store for tasks on the server
-import type { Task, TaskStatus, Comment } from '@/lib/types'; // Added Comment
-import { mockTasks as initialMockTasks } from '@/lib/mock-data'; // Renamed to avoid conflict
+import type { Task, TaskStatus, Comment } from '@/lib/types';
+import { mockTasks as initialMockTasks } from '@/lib/mock-data';
 import { v4 as uuidv4 } from 'uuid';
 
 // Initialize with a copy of mockTasks from mock-data.ts
@@ -39,6 +39,8 @@ export function createTask(taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'
   };
 
   tasksDB.push(newTask);
+  // Sort the entire DB to mimic some persistent order, in a real DB this would be handled by queries
+  tasksDB.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   return newTask;
 }
 
@@ -48,9 +50,14 @@ export function updateTaskInDB(taskId: string, updates: Partial<Omit<Task, 'id' 
     return null;
   }
   
+  // Ensure comments array is part of the updates if provided, otherwise keep existing
+  const existingTask = tasksDB[taskIndex];
+  const updatedComments = 'comments' in updates ? updates.comments : existingTask.comments;
+
   tasksDB[taskIndex] = { 
-    ...tasksDB[taskIndex], 
-    ...updates, // This will include comments if they are in updates
+    ...existingTask, 
+    ...updates,
+    comments: updatedComments, // Explicitly handle comments
     updatedAt: new Date().toISOString() 
   };
   

@@ -2,7 +2,7 @@
 // src/app/api/tasks/route.ts
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import type { Task, TaskStatus, Comment } from '@/lib/types'; // Added Comment
+import type { Task, TaskStatus, Comment } from '@/lib/types';
 import { getAllTasks, createTask as createTaskInDB } from '@/lib/server-task-store';
 
 export async function GET(request: NextRequest) {

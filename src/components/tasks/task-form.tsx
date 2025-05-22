@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Paperclip, Trash2, UploadCloud, UserCircle, Wand2, Loader2, ListChecks, Brain } from 'lucide-react';
+import { CalendarIcon, Paperclip, Trash2, UploadCloud, UserCircle, Wand2, Loader2, Brain } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { TASK_PRIORITIES, TASK_STATUSES, DEFAULT_CATEGORIES } from '@/lib/constants';
@@ -27,10 +27,12 @@ import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { suggestTaskDetails } from '@/ai/flows/suggest-task-details-flow';
-import { suggestSubtasks } from '@/ai/flows/suggest-subtasks-flow'; // Added new import
-import { Separator } from '../ui/separator';
-import { ScrollArea } from '../ui/scroll-area';
-import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { suggestSubtasks } from '@/ai/flows/suggest-subtasks-flow';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent } from '@/components/ui/card';
+
 
 const taskFormSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters." }),
@@ -70,7 +72,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
   const [currentFiles, setCurrentFiles] = useState<TaskFile[]>(task?.files || []);
   const [isSuggestingDetails, setIsSuggestingDetails] = useState(false);
 
-  const [suggestedSubtasks, setSuggestedSubtasks] = useState<string[]>([]);
+  const [suggestedSubtasksList, setSuggestedSubtasksList] = useState<string[]>([]);
   const [isSuggestingSubtasks, setIsSuggestingSubtasks] = useState(false);
   const [subtasksError, setSubtasksError] = useState<string | null>(null);
 
@@ -102,7 +104,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
         files: task.files || [],
       });
       setCurrentFiles(task.files || []);
-      setSuggestedSubtasks([]); // Clear subtasks when task changes
+      setSuggestedSubtasksList([]); 
       setSubtasksError(null);
     } else {
       form.reset({
@@ -116,7 +118,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
         files: [],
       });
       setCurrentFiles([]);
-      setSuggestedSubtasks([]);
+      setSuggestedSubtasksList([]);
       setSubtasksError(null);
     }
   }, [task, form]);
@@ -162,29 +164,29 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
 
     if (!taskTitle.trim()) {
       setSubtasksError('Please enter a task title before suggesting sub-tasks.');
-      setSuggestedSubtasks([]);
+      setSuggestedSubtasksList([]);
       return;
     }
 
     setIsSuggestingSubtasks(true);
     setSubtasksError(null);
-    setSuggestedSubtasks([]); 
+    setSuggestedSubtasksList([]); 
     try {
       const result = await suggestSubtasks({ taskTitle, taskDescription });
       if (result.suggestedSubtasks && result.suggestedSubtasks.length > 0) {
-        setSuggestedSubtasks(result.suggestedSubtasks);
+        setSuggestedSubtasksList(result.suggestedSubtasks);
         toast({
           title: 'AI Sub-task Suggestions Ready!',
           description: 'Review the suggested sub-tasks below.',
         });
       } else {
-        setSuggestedSubtasks([]);
+        setSuggestedSubtasksList([]);
         setSubtasksError('AI could not generate sub-tasks for this item, or no sub-tasks were suggested. Try rephrasing the title/description.');
       }
     } catch (error) {
       console.error('Error suggesting sub-tasks:', error);
       setSubtasksError(error instanceof Error ? error.message : 'Failed to get AI sub-task suggestions.');
-      setSuggestedSubtasks([]);
+      setSuggestedSubtasksList([]);
     } finally {
       setIsSuggestingSubtasks(false);
     }
@@ -209,7 +211,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
     onOpenChange?.(false);
     form.reset();
     setCurrentFiles([]);
-    setSuggestedSubtasks([]);
+    setSuggestedSubtasksList([]);
     setSubtasksError(null);
   };
 
@@ -230,8 +232,8 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-      <ScrollArea className="max-h-[75vh] pr-3"> {/* Encapsulate form content in ScrollArea */}
-        <div className="space-y-6">
+      <ScrollArea className="max-h-[70vh] pr-3"> {/* Adjusted max-h */}
+        <div className="space-y-6 p-1"> {/* Added padding for scroll content */}
           <div>
             <Label htmlFor="title">Title</Label>
             <Input id="title" {...form.register('title')} placeholder="e.g., Schedule team meeting" />
@@ -386,7 +388,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
           </div>
 
           <div>
-            <Label>Files</Label>
+            <Label>Files (Mock)</Label>
             <div className="space-y-2 mt-1">
               {currentFiles.map(file => (
                 <div key={file.id} className="flex items-center justify-between p-2 border rounded-md bg-secondary/50">
@@ -410,7 +412,10 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <Label className="text-base font-semibold">AI Task Breakdown</Label>
+              <Label className="text-base font-semibold flex items-center gap-2">
+                <Brain className="h-5 w-5 text-primary" />
+                AI Task Breakdown
+              </Label>
               <Button
                 type="button"
                 variant="outline"
@@ -422,7 +427,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
                 {isSuggestingSubtasks ? (
                   <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                 ) : (
-                  <Brain className="mr-1 h-3 w-3" />
+                  <Brain className="mr-1 h-3 w-3" /> /* Consistent icon */
                 )}
                 Suggest Sub-tasks
               </Button>
@@ -438,19 +443,19 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
                 <AlertDescription>{subtasksError}</AlertDescription>
               </Alert>
             )}
-            {suggestedSubtasks.length > 0 && !isSuggestingSubtasks && (
+            {suggestedSubtasksList.length > 0 && !isSuggestingSubtasks && (
               <Card className="mt-2 p-4 bg-muted/30">
                 <CardContent className="p-0">
                   <p className="text-sm font-medium mb-2">Suggested Sub-tasks/Checklist:</p>
                   <ul className="list-disc list-inside space-y-1 text-sm">
-                    {suggestedSubtasks.map((subtask, index) => (
+                    {suggestedSubtasksList.map((subtask, index) => (
                       <li key={index}>{subtask}</li>
                     ))}
                   </ul>
                 </CardContent>
               </Card>
             )}
-            {!isSuggestingSubtasks && !subtasksError && suggestedSubtasks.length === 0 && (
+            {!isSuggestingSubtasks && !subtasksError && suggestedSubtasksList.length === 0 && (
               <p className="text-xs text-muted-foreground text-center py-2">
                 Enter a title and click "Suggest Sub-tasks" for AI-powered breakdown.
               </p>
@@ -459,8 +464,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
         </div>
       </ScrollArea>
 
-
-      <div className="flex justify-end gap-2 pt-4 border-t">
+      <div className="flex justify-end gap-2 pt-4 border-t mt-auto"> {/* Ensure this is outside ScrollArea */}
         <Button type="button" variant="outline" onClick={() => onOpenChange?.(false)}>
           Cancel
         </Button>
@@ -476,3 +480,5 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
     </form>
   );
 }
+
+    

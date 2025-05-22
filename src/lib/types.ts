@@ -117,3 +117,32 @@ export interface GenerateChatHighlightsInput {
 export interface GenerateChatHighlightsOutput {
   highlights: string;
 }
+
+// For AI Project Health Report
+export interface ProjectTaskSnapshot {
+  id: string;
+  title: string;
+  description?: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  dueDate?: string;
+  assignedTo?: string;
+  category?: string;
+}
+
+export interface GenerateProjectHealthReportInput {
+  tasks: ProjectTaskSnapshot[];
+  projectName?: string;
+  reportDate?: string; // YYYY-MM-DD
+}
+
+export interface ProjectHealthReport {
+  overallSummary: string;
+  riskAssessment: string; // Could detail overdue tasks, high-priority pile-ups
+  keyHighlights: string; // Positive developments, completed milestones
+  blockersAndChallenges: string;
+  actionableRecommendations: string;
+  reportDate?: string;
+  projectName?: string;
+}
+export type GenerateProjectHealthReportOutput = ProjectHealthReport;

@@ -25,7 +25,8 @@ import {
     ShieldCheck,
     MessageSquareText,
     GanttChartSquare,
-    MessagesSquare // Added icon for Team Chat
+    MessagesSquare,
+    BarChart3 // Added icon for Reports
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -37,7 +38,8 @@ const navItems = [
   { href: '/summary', label: 'Summary', icon: ScrollText },
   { href: '/standup-history', label: 'Standups', icon: MessageSquareText },
   { href: '/time-travel', label: 'Time Travel', icon: GanttChartSquare },
-  { href: '/team-chat', label: 'Team Chat', icon: MessagesSquare }, // New Item for Team Chat
+  { href: '/team-chat', label: 'Team Chat', icon: MessagesSquare },
+  { href: '/reports', label: 'Reports', icon: BarChart3 }, // New Item for Reports
 ];
 
 const adminNavItems = [
@@ -51,13 +53,12 @@ export function AppSidebar() {
   const getAvailableNavItems = () => {
     let items = [...navItems];
     if (user?.role === 'admin') {
-      // Find index of Time Travel
-      const timeTravelIndex = items.findIndex(item => item.href === '/time-travel');
-      if (timeTravelIndex !== -1) {
-        // Insert Admin Panel after Time Travel
-        items.splice(timeTravelIndex + 1, 0, ...adminNavItems);
+      // Find index of Reports (or a suitable item to insert after)
+      const reportsIndex = items.findIndex(item => item.href === '/reports');
+      if (reportsIndex !== -1 && reportsIndex < items.length -1) { // Ensure it's not the last item already
+        items.splice(reportsIndex + 1, 0, ...adminNavItems);
       } else {
-        // Fallback: add admin items at the end if Time Travel isn't found
+        // Fallback: add admin items at the end
         items = [...items, ...adminNavItems];
       }
     }

@@ -8,5 +8,6 @@ import '@/ai/flows/generate-standup-summary-flow.ts';
 import '@/ai/flows/predict-timeline-impact-flow.ts';
 import '@/ai/flows/suggest-subtasks-flow.ts';
 import '@/ai/flows/suggest-task-priority-flow.ts';
-import '@/ai/flows/suggest-chat-replies-flow.ts'; // Added new flow
-import '@/ai/flows/generate-chat-highlights-flow.ts'; // Added new flow
+import '@/ai/flows/suggest-chat-replies-flow.ts'; 
+import '@/ai/flows/generate-chat-highlights-flow.ts'; 
+import '@/ai/flows/generate-project-health-report-flow.ts'; // Added new flow

@@ -22,13 +22,14 @@ export default function StandupHistoryPage() {
   const [isGeneratingTodaysSummary, setIsGeneratingTodaysSummary] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
 
-  // Convert historicalStandupSummaries to state and sort them initially
   const [displayedHistoricalSummaries, setDisplayedHistoricalSummaries] = useState<StandupSummary[]>(() => 
     [...mockStandupSummaries].sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime())
   );
 
   const formatSummaryTextForDisplay = (text: string | undefined | null): string => {
     if (!text) return "";
+    // Convert markdown-like bold to <strong> and newlines to <br />
+    // Emojis should render naturally if they are part of the text.
     return text
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
       .replace(/\n/g, '<br />'); 
@@ -37,7 +38,7 @@ export default function StandupHistoryPage() {
   const handleGenerateTodaysMockSummary = async () => {
     setIsGeneratingTodaysSummary(true);
     setGenerationError(null);
-    setTodaysSummary(null); // Clear previous "today's summary" if any
+    setTodaysSummary(null); 
 
     const mockReports: StandupReportItem[] = [];
     const usersToReport = assignableUsers.slice(0, 3); 
@@ -49,16 +50,25 @@ export default function StandupHistoryPage() {
       let blockers = "";
 
       if (userTasks.length > 0) {
-        const recentTask = userTasks.sort((a,b) => {
-            const dateA = a.updatedAt ? parseISO(a.updatedAt).getTime() : 0;
-            const dateB = b.updatedAt ? parseISO(b.updatedAt).getTime() : 0;
-            return dateB - dateA;
-        })[0];
-        didYesterday = `Focused on "${recentTask.title}".`;
-        doingToday = `Will continue working on "${recentTask.title}" and other assignments.`;
-        if (recentTask.status === 'inprogress' && Math.random() > 0.7) { 
-          blockers = `Facing a minor challenge with "${recentTask.title}".`;
+        const recentlyCompleted = userTasks.find(t => t.status === 'done');
+        const inProgress = userTasks.find(t => t.status === 'inprogress');
+        
+        if (recentlyCompleted) {
+          didYesterday = `Completed "${recentlyCompleted.title}".`;
+        } else {
+          didYesterday = "Reviewed project documentation.";
         }
+        
+        if (inProgress) {
+          doingToday = `Will continue working on "${inProgress.title}".`;
+          if (Math.random() > 0.7) { 
+            blockers = `Facing a challenge with "${inProgress.title}".`;
+          }
+        } else {
+          const todoTask = userTasks.find(t => t.status === 'todo');
+          doingToday = todoTask ? `Planning to start "${todoTask.title}".` : "Planning to pick up new tasks.";
+        }
+
       } else {
         didYesterday = "Reviewed project documentation and prepared for upcoming tasks.";
         doingToday = "Planning to pick up new tasks from the backlog.";
@@ -92,15 +102,15 @@ export default function StandupHistoryPage() {
     try {
       const result = await generateStandupSummary(input);
       const newSummary: StandupSummary = {
-        id: `today-${Date.now()}`, // Unique ID for React key
+        id: `today-${Date.now()}`, 
         date: input.summaryDate!,
         summaryText: result.consolidatedSummary,
         projectId: input.projectName,
       };
-      setTodaysSummary(newSummary); // Set for prominent display
+      setTodaysSummary(newSummary); 
       setDisplayedHistoricalSummaries(prevSummaries => 
         [newSummary, ...prevSummaries].sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime())
-      ); // Add to historical list and re-sort
+      ); 
     } catch (e) {
       console.error("Error generating today's summary:", e);
       setGenerationError(e instanceof Error ? e.message : "Failed to generate summary.");
@@ -157,11 +167,11 @@ export default function StandupHistoryPage() {
           <CardHeader>
             <div className="flex justify-between items-center">
               <CardTitle className="text-xl text-primary">
-                Today's Standup Summary ({format(parseISO(todaysSummary.date), "MMMM d, yyyy")})
+                Today's Standup Summary ({format(parseISO(todaysSummary.date), "PPP")})
               </CardTitle>
               <div className="flex items-center text-sm text-primary gap-1">
                 <CalendarDays className="h-4 w-4" />
-                <span>{format(parseISO(todaysSummary.date), "EEE, MMM d")}</span>
+                <span>Generated: {format(parseISO(todaysSummary.date), "EEE, MMM d, yyyy")}</span>
               </div>
             </div>
             {todaysSummary.projectId && (
@@ -178,44 +188,46 @@ export default function StandupHistoryPage() {
       )}
       
       <CardTitle className="text-2xl mb-4 mt-8">Historical Summaries</CardTitle>
-      {displayedHistoricalSummaries.length === 0 ? (
+      {displayedHistoricalSummaries.length === 0 && !todaysSummary ? ( // Condition to show only if no historical and no today's summary
         <Card>
           <CardHeader>
-            <CardTitle>No Historical Summaries Yet</CardTitle>
+            <CardTitle>No Standup Summaries Yet</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
-              There are no past standup summaries recorded.
+              Generate today's summary or check back later for historical records.
             </p>
           </CardContent>
         </Card>
       ) : (
-        <ScrollArea className="h-[calc(100vh-30rem)]"> {/* Adjusted height slightly */}
+        <ScrollArea className="h-[calc(100vh-30rem)]">
           <div className="space-y-6">
-            {/* Display the state `displayedHistoricalSummaries` which includes newly generated ones */}
             {displayedHistoricalSummaries.map((summary) => (
-              <Card key={summary.id} className="shadow-md hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <CardTitle className="text-xl">
-                      Standup for {format(parseISO(summary.date), "MMMM d, yyyy")}
-                    </CardTitle>
-                    <div className="flex items-center text-sm text-muted-foreground gap-1">
-                      <CalendarDays className="h-4 w-4" />
-                      <span>{format(parseISO(summary.date), "EEE, MMM d")}</span>
+              // Don't render today's summary again if it's already shown prominently
+              (todaysSummary && todaysSummary.id === summary.id && !generationError && !isGeneratingTodaysSummary) ? null : (
+                <Card key={summary.id} className="shadow-md hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <div className="flex justify-between items-center">
+                      <CardTitle className="text-xl">
+                        Summary for {format(parseISO(summary.date), "MMMM d, yyyy")}
+                      </CardTitle>
+                      <div className="flex items-center text-sm text-muted-foreground gap-1">
+                        <CalendarDays className="h-4 w-4" />
+                        <span>{format(parseISO(summary.date), "EEE, MMM d")}</span>
+                      </div>
                     </div>
-                  </div>
-                  {summary.projectId && (
-                    <CardDescription>Project: {summary.projectId}</CardDescription>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  <div 
-                    className="prose prose-sm dark:prose-invert max-w-none"
-                    dangerouslySetInnerHTML={{ __html: formatSummaryTextForDisplay(summary.summaryText) }} 
-                  />
-                </CardContent>
-              </Card>
+                    {summary.projectId && (
+                      <CardDescription>Project: {summary.projectId}</CardDescription>
+                    )}
+                  </CardHeader>
+                  <CardContent>
+                    <div 
+                      className="prose prose-sm dark:prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{ __html: formatSummaryTextForDisplay(summary.summaryText) }} 
+                    />
+                  </CardContent>
+                </Card>
+              )
             ))}
           </div>
         </ScrollArea>

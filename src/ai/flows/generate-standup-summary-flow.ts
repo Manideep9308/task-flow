@@ -28,7 +28,7 @@ const GenerateStandupSummaryInputSchema = z.object({
 export type GenerateStandupSummaryInput = z.infer<typeof GenerateStandupSummaryInputSchema>;
 
 const GenerateStandupSummaryOutputSchema = z.object({
-  consolidatedSummary: z.string().describe('A concise, structured summary of all team updates, organized by "Yesterday", "Today", and "Blockers", with status emojis and highlighted blockers.'),
+  consolidatedSummary: z.string().describe('A concise, structured summary of all team updates, organized by "Yesterday", "Today", and "Blockers", with status emojis and highlighted blockers. Task titles should be linked if mentioned.'),
 });
 export type GenerateStandupSummaryOutput = z.infer<typeof GenerateStandupSummaryOutputSchema>;
 
@@ -70,9 +70,9 @@ Generate the consolidated summary in a professional tone.
 Focus on clear communication of progress, plans, and impediments.
 
 Instructions for formatting your output:
-- For items listed under "What was completed yesterday?", if they represent completed work, precede them with a ✅ emoji.
-- For items listed under "What is planned for today?", if they represent tasks in progress or planned, precede them with a 🚧 emoji.
-- For "Blockers or issues", if any are reported, precede each distinct blocker with a ⚠️ emoji and ensure the term "Blocker:" or "Issue:" is clearly stated. If no blockers, state "None reported."
+- For items listed under "What was completed yesterday?", if they represent completed work, precede them with a ✅ emoji. Include relevant task titles.
+- For items listed under "What is planned for today?", if they represent tasks in progress or planned, precede them with a 🚧 emoji. Include relevant task titles.
+- For "Blockers or issues", if any are reported, precede each distinct blocker with a ⚠️ emoji and ensure the term "Blocker:" or "Issue:" is clearly stated. If a blocker is directly related to a specific task, please mention the full task title clearly in the blocker description. If no blockers, state "None reported."
 - Ensure task titles or key accomplishments are clearly mentioned.
 
 Example format:
@@ -80,15 +80,15 @@ Example format:
 Optional: **Project: [Project Name]**
 
 **Yesterday:**
-*   [User Name]: ✅ [Summary of yesterday's work, e.g., Completed feature X]
+*   [User Name]: ✅ [Summary of yesterday's work, e.g., Completed feature X (Task: "Title of Feature X")]
 *   ...
 
 **Today:**
-*   [User Name]: 🚧 [Summary of today's plans, e.g., Start work on feature Y]
+*   [User Name]: 🚧 [Summary of today's plans, e.g., Start work on feature Y (Task: "Title of Feature Y")]
 *   ...
 
 **Blockers:**
-*   [User Name]: ⚠️ [Blocker description, if any]
+*   [User Name]: ⚠️ [Blocker description, e.g., Facing an issue with the deployment of "Task Title Z".]
 *   ... (or "None reported.")
 `,
 });
@@ -110,3 +110,4 @@ const generateStandupSummaryFlow = ai.defineFlow(
     return output;
   }
 );
+

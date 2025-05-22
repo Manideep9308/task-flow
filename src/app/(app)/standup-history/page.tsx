@@ -38,8 +38,8 @@ export default function StandupHistoryPage() {
     const sortedTasks = [...allTasks].sort((a, b) => b.title.length - a.title.length);
     sortedTasks.forEach(task => {
       if (task.title) {
-        // Regex to match whole word, case insensitive
-        const titleRegex = new RegExp(`\\b(${task.title.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})\\b`, 'gi');
+        // Regex to match whole word, case insensitive, ensuring it's not already part of an href
+        const titleRegex = new RegExp(`(?<!href="[^"]*?)(\\b${task.title.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b)(?!.*?</a>)`, 'gi');
         formattedText = formattedText.replace(titleRegex, (match) => 
           `<a href="/tasks?openTask=${task.id}" class="text-primary hover:underline">${match}</a>`
         );
@@ -52,7 +52,7 @@ export default function StandupHistoryPage() {
   const handleGenerateTodaysMockSummary = async () => {
     setIsGeneratingTodaysSummary(true);
     setGenerationError(null);
-    setTodaysSummary(null); 
+    // Do not clear todaysSummary here, let it be replaced or stay if error occurs
 
     const mockReports: StandupReportItem[] = [];
     const usersToReport = assignableUsers.slice(0, 3); 
@@ -61,7 +61,7 @@ export default function StandupHistoryPage() {
       const userTasks: Task[] = tasks.filter(t => t.assignedTo === user.id);
       let didYesterday = "Worked on various project tasks.";
       let doingToday = "Continuing with assigned tasks.";
-      let blockers = "";
+      let blockers = "None reported"; // Default to none
 
       if (userTasks.length > 0) {
         const recentlyCompleted = userTasks.find(t => t.status === 'done');
@@ -75,8 +75,9 @@ export default function StandupHistoryPage() {
         
         if (inProgress) {
           doingToday = `Will continue working on "${inProgress.title}".`;
-          if (Math.random() > 0.7) { 
-            blockers = `Facing a challenge with "${inProgress.title}".`;
+          // More reliably add a blocker with a task title for testing
+          if (Math.random() > 0.5) { // Increased chance for testing
+            blockers = `Facing a challenge with "${inProgress.title}". Needs urgent attention.`;
           }
         } else {
           const todoTask = userTasks.find(t => t.status === 'todo');
@@ -93,11 +94,19 @@ export default function StandupHistoryPage() {
         userName: user.name || user.email,
         didYesterday,
         doingToday,
-        blockers: blockers || "None reported",
+        blockers, // Use the potentially updated blockers string
       });
     });
     
-    if (mockReports.length === 0) {
+    if (mockReports.length === 0 && assignableUsers.length > 0) {
+         mockReports.push({
+            userId: assignableUsers[0].id,
+            userName: assignableUsers[0].name || assignableUsers[0].email,
+            didYesterday: 'Monitored system performance and addressed minor issues.',
+            doingToday: 'Scheduled routine maintenance and reviewed project timelines for "Project Phoenix".',
+            blockers: 'Waiting for feedback on "Client Proposal Q3".',
+        });
+    } else if (mockReports.length === 0) {
          mockReports.push({
             userId: 'mock-user-system',
             userName: 'System Admin',
@@ -106,6 +115,7 @@ export default function StandupHistoryPage() {
             blockers: 'None reported',
         });
     }
+
 
     const input: GenerateStandupSummaryInput = {
       reports: mockReports,
@@ -122,12 +132,18 @@ export default function StandupHistoryPage() {
         projectId: input.projectName,
       };
       setTodaysSummary(newSummary); 
-      setDisplayedHistoricalSummaries(prevSummaries => 
-        [newSummary, ...prevSummaries].sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime())
-      ); 
+      
+      // Add to the displayed list and resort
+      setDisplayedHistoricalSummaries(prevSummaries => {
+        // Avoid adding duplicate "today's" summaries if button is clicked multiple times
+        const filteredPrev = prevSummaries.filter(s => !s.id.startsWith('today-'));
+        return [newSummary, ...filteredPrev].sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
+      });
+
     } catch (e) {
       console.error("Error generating today's summary:", e);
       setGenerationError(e instanceof Error ? e.message : "Failed to generate summary.");
+      setTodaysSummary(null); // Clear previous today's summary on error
     } finally {
       setIsGeneratingTodaysSummary(false);
     }
@@ -202,7 +218,7 @@ export default function StandupHistoryPage() {
       )}
       
       <CardTitle className="text-2xl mb-4 mt-8">Historical Summaries</CardTitle>
-      {displayedHistoricalSummaries.length === 0 && !todaysSummary ? (
+      {displayedHistoricalSummaries.length === 0 && !todaysSummary && !isGeneratingTodaysSummary && !generationError ? (
         <Card>
           <CardHeader>
             <CardTitle>No Standup Summaries Yet</CardTitle>
@@ -214,9 +230,10 @@ export default function StandupHistoryPage() {
           </CardContent>
         </Card>
       ) : (
-        <ScrollArea className="h-[calc(100vh-30rem)]">
+        <ScrollArea className="h-[calc(100vh-30rem)]"> {/* Adjust height as needed */}
           <div className="space-y-6">
             {displayedHistoricalSummaries.map((summary) => (
+              // Only render historical if it's not the currently displayed "Today's Summary"
               (todaysSummary && todaysSummary.id === summary.id && !generationError && !isGeneratingTodaysSummary) ? null : (
                 <Card key={summary.id} className="shadow-md hover:shadow-lg transition-shadow">
                   <CardHeader>
@@ -248,3 +265,5 @@ export default function StandupHistoryPage() {
     </div>
   );
 }
+
+    

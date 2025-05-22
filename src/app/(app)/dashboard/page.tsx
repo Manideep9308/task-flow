@@ -77,6 +77,10 @@ export default function DashboardPage() {
     }
   }, [isMounted, tasks, tasksLoading]);
 
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setIsEditModalOpen(true);
+  };
 
   const handleDrop = async (e: React.DragEvent<HTMLDivElement>, targetStatus: TaskStatus) => {
     e.preventDefault();

@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Paperclip, Trash2, UploadCloud, UserCircle, Wand2, Loader2, Brain, Sparkles } from 'lucide-react'; // Added Sparkles
+import { CalendarIcon, Paperclip, Trash2, UploadCloud, UserCircle, Wand2, Loader2, Brain, Sparkles } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { TASK_PRIORITIES, TASK_STATUSES, DEFAULT_CATEGORIES } from '@/lib/constants';
@@ -28,7 +28,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { suggestTaskDetails } from '@/ai/flows/suggest-task-details-flow';
 import { suggestSubtasks } from '@/ai/flows/suggest-subtasks-flow';
-import { suggestTaskPriority } from '@/ai/flows/suggest-task-priority-flow'; // Added import
+import { suggestTaskPriority } from '@/ai/flows/suggest-task-priority-flow';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -72,7 +72,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
   const { toast } = useToast();
   const [currentFiles, setCurrentFiles] = useState<TaskFile[]>(task?.files || []);
   const [isSuggestingDetails, setIsSuggestingDetails] = useState(false);
-  const [isSuggestingPriority, setIsSuggestingPriority] = useState(false); // New state
+  const [isSuggestingPriority, setIsSuggestingPriority] = useState(false);
 
   const [suggestedSubtasksList, setSuggestedSubtasksList] = useState<string[]>([]);
   const [isSuggestingSubtasks, setIsSuggestingSubtasks] = useState(false);
@@ -197,7 +197,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
             </Button>
           </div>
         ),
-        duration: 10000, // Keep toast longer for interaction
+        duration: 10000,
       });
     } catch (error) {
       console.error('Error suggesting task priority:', error);
@@ -210,7 +210,6 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
       setIsSuggestingPriority(false);
     }
   };
-
 
   const handleSuggestSubtasks = async () => {
     const taskTitle = form.getValues('title');
@@ -245,7 +244,6 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
       setIsSuggestingSubtasks(false);
     }
   };
-
 
   const onSubmit = (data: TaskFormValues) => {
     const taskData = {
@@ -373,7 +371,6 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
             </CardContent>
           </Card>
           <Separator />
-
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -553,4 +550,3 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
     </form>
   );
 }
-

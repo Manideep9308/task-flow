@@ -34,6 +34,7 @@ export default function AppLayout({
   }
   
   if (!user && pathname !== '/login' && pathname !== '/signup') {
+    // This case should ideally not be hit if useEffect runs, but it's a fallback.
     return (
       <div className="flex items-center justify-center min-h-screen bg-muted/40">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -49,8 +50,8 @@ export default function AppLayout({
           <div className="flex flex-col flex-1 print:pl-0 md:peer-data-[state=expanded]:pl-[var(--sidebar-width)] md:peer-data-[state=collapsed]:pl-[var(--sidebar-width-icon)] transition-[padding-left] duration-200 ease-linear">
             <AppHeader /> {/* Sticky, h-16 (4rem), z-30 */}
             
-            {/* Main content area: pt-16 to offset header, overflow-y-auto for scrolling */}
-            <main className="flex-1 pt-16 overflow-y-auto px-4 sm:px-6 pb-4 sm:pb-6">
+            {/* Main content area: pt-16 to offset header, overflow-y-auto for scrolling. Horizontal padding removed. */}
+            <main className="flex-1 pt-16 overflow-y-auto pb-4 sm:pb-6">
               {children}
             </main>
           </div>

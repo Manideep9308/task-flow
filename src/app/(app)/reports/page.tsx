@@ -17,7 +17,7 @@ import { format, subDays } from 'date-fns';
 
 export default function ReportsPage() {
   const { tasks, isLoading: tasksLoading } = useTasks();
-  const { assignableUsers } = useAuth(); // For mocking top contributors
+  const { assignableUsers } = useAuth(); 
 
   const [healthReport, setHealthReport] = useState<GenerateProjectHealthReportOutput | null>(null);
   const [isLoadingHealthReport, setIsLoadingHealthReport] = useState(false);
@@ -81,19 +81,18 @@ export default function ReportsPage() {
     const tasksCompleted = tasks.filter(t => t.status === 'done').length;
     const tasksIncomplete = totalTasks - tasksCompleted;
     const tasksDelayed = tasks.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'done').length;
-    // Mocking some values as we don't have explicit data for all fields
     const mockTopContributors = assignableUsers.slice(0, 2).map(u => u.name || u.email);
 
     const input: GenerateRetrospectiveReportInput = {
       tasks: mappedTasksForRetrospective,
       projectName: "TaskFlow Project (Demo)",
-      startDate: format(subDays(new Date(), 30), "yyyy-MM-dd"), // Mock start date (30 days ago)
-      endDate: format(new Date(), "yyyy-MM-dd"), // Mock end date (today)
+      startDate: format(subDays(new Date(), 30), "yyyy-MM-dd"), 
+      endDate: format(new Date(), "yyyy-MM-dd"), 
       totalTasks,
       tasksCompleted,
       tasksIncomplete,
       tasksDelayed,
-      tasksBlocked: tasks.filter(t => t.description?.toLowerCase().includes("blocker") || t.title?.toLowerCase().includes("blocked")).length || 0, // Simple mock for blocked
+      tasksBlocked: tasks.filter(t => t.description?.toLowerCase().includes("blocker") || t.title?.toLowerCase().includes("blocked")).length || 0, 
       topContributors: mockTopContributors,
       activityLogs: "Mock Activity Log: Team started sprint 1. Feature X completed. Daily standups held. Minor deployment issue resolved.",
       issueSummary: "Mock Issue Summary: Initial setup took longer than expected. One critical bug found and fixed pre-release. Some scope creep discussions.",
@@ -110,7 +109,6 @@ export default function ReportsPage() {
       setIsLoadingRetrospective(false);
     }
   };
-
 
   const renderFormattedText = (text: string | undefined | null): React.ReactNode => {
     if (!text) return null;

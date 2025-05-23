@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ShieldCheck, Users, Settings, UserCircle, Edit3, Paintbrush, AlertTriangle, Search, Info, Send, MailPlus } from "lucide-react"; // Added Info, Send, MailPlus icons
+import { ShieldCheck, Users, Settings, UserCircle, Edit3, Paintbrush, AlertTriangle, Search, Info, Send, MailPlus } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { getInitials } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +30,7 @@ import {
 import type { User, UserRole } from "@/lib/types";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast"; // Added useToast
+import { useToast } from "@/hooks/use-toast";
 
 const ROLES_AVAILABLE: { value: UserRole; label: string }[] = [
   { value: 'admin', label: 'Admin' },
@@ -97,7 +97,7 @@ export default function AdminPage() {
       title: "Mock Invitation Sent",
       description: `An invitation has been 'sent' to ${inviteEmail} for the role of ${inviteRole}. (This is a mock feature).`,
     });
-    setInviteEmail(""); // Clear input after sending
+    setInviteEmail(""); 
   };
 
   const filteredUsers = assignableUsers.filter(user => {

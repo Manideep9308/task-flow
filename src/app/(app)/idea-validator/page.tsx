@@ -8,15 +8,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Loader2, Wand2, AlertTriangle, Lightbulb, HelpCircle, SearchCheck, Zap, Eye, MessageSquareQuote, Shuffle, Trash2 } from "lucide-react"; // Corrected Icon
+import { Loader2, Wand2, AlertTriangle, Lightbulb, HelpCircle, SearchCheck, Eye, MessageSquareQuote, Shuffle, Trash2, Zap } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { validateProjectPremise, type ValidateProjectPremiseInput, type ValidateProjectPremiseOutput, type ValidationSection } from "@/ai/flows/validate-project-premise-flow";
 import { Separator } from "@/components/ui/separator";
 
 const iconMap: Record<string, React.ElementType> = {
   "Potential Blind Spots": Eye,
-  "Challenging Questions": MessageSquareQuote, // Corrected Icon
-  "Potential Risks": Zap,
+  "Challenging Questions": MessageSquareQuote,
+  "Potential Risks": AlertTriangle, // Changed from Zap
   "Alternative Perspectives": Shuffle,
 };
 
@@ -25,7 +25,7 @@ export default function IdeaValidatorPage() {
   const [projectIdea, setProjectIdea] = useState("");
   const [coreProblemSolved, setCoreProblemSolved] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
-  const [keyGoals, setKeyGoals] = useState<string[]>([""]); // Start with one empty goal field
+  const [keyGoals, setKeyGoals] = useState<string[]>([""]);
 
   const [validationResult, setValidationResult] = useState<ValidateProjectPremiseOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -63,7 +63,7 @@ export default function IdeaValidatorPage() {
       projectIdea,
       coreProblemSolved,
       targetAudience,
-      keyGoals: keyGoals.filter(g => g.trim()), // Filter out empty goals
+      keyGoals: keyGoals.filter(g => g.trim()),
     };
 
     try {
@@ -81,7 +81,7 @@ export default function IdeaValidatorPage() {
     if (!section || !section.points || section.points.length === 0) {
       return (
         <AccordionItem value={defaultTitle.toLowerCase().replace(/\s+/g, '-')}>
-          <AccordionTrigger className="text-lg">
+          <AccordionTrigger className="text-lg hover:no-underline">
              <div className="flex items-center gap-2">
                 {React.createElement(iconMap[section?.title || defaultTitle] || HelpCircle, { className: "h-5 w-5 text-primary/80" })}
                 {section?.title || defaultTitle}

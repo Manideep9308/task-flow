@@ -8,14 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Loader2, Wand2, AlertTriangle, Lightbulb, HelpCircle, SearchCheck, Zap, Eye, MessageSquareQuestion, Shuffle } from "lucide-react";
+import { Loader2, Wand2, AlertTriangle, Lightbulb, HelpCircle, SearchCheck, Zap, Eye, MessageSquareQuote, Shuffle, Trash2 } from "lucide-react"; // Corrected Icon
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { validateProjectPremise, type ValidateProjectPremiseInput, type ValidateProjectPremiseOutput, type ValidationSection } from "@/ai/flows/validate-project-premise-flow";
 import { Separator } from "@/components/ui/separator";
 
 const iconMap: Record<string, React.ElementType> = {
   "Potential Blind Spots": Eye,
-  "Challenging Questions": MessageSquareQuestion,
+  "Challenging Questions": MessageSquareQuote, // Corrected Icon
   "Potential Risks": Zap,
   "Alternative Perspectives": Shuffle,
 };

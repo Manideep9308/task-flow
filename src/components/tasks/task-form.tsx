@@ -1,7 +1,7 @@
 
 "use client";
 
-import type { Task, TaskPriority, TaskStatus, TaskFile, Comment, MeetingPrepBriefingOutput } from '@/lib/types';
+import type { Task, TaskPriority, TaskStatus, TaskFile, Comment } from '@/lib/types';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Paperclip, Trash2, UploadCloud, UserCircle, Wand2, Loader2, Brain, Sparkles, MessageSquare, Send, BookOpenCheck } from 'lucide-react'; // Added BookOpenCheck
+import { CalendarIcon, Paperclip, Trash2, UploadCloud, UserCircle, Wand2, Loader2, Brain, Sparkles, MessageSquare, Send } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
 import { cn, getInitials } from '@/lib/utils';
 import { TASK_PRIORITIES, TASK_STATUSES, DEFAULT_CATEGORIES } from '@/lib/constants';
@@ -29,23 +29,12 @@ import { useEffect, useState } from 'react';
 import { suggestTaskDetails } from '@/ai/flows/suggest-task-details-flow';
 import { suggestSubtasks } from '@/ai/flows/suggest-subtasks-flow';
 import { suggestTaskPriority } from '@/ai/flows/suggest-task-priority-flow';
-import { generateMeetingPrepBriefing } from '@/ai/flows/generate-meeting-prep-briefing-flow'; // Added
+
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Card, CardContent, CardHeader, CardTitle as UiCardTitle } from '@/components/ui/card'; // Aliased CardTitle
+import { Card, CardContent, CardHeader, CardTitle as UiCardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 
 
 const taskFormSchema = z.object({
@@ -101,11 +90,6 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
   const [isSuggestingSubtasks, setIsSuggestingSubtasks] = useState(false);
   const [subtasksError, setSubtasksError] = useState<string | null>(null);
 
-  const [meetingBriefing, setMeetingBriefing] = useState<MeetingPrepBriefingOutput | null>(null);
-  const [isGeneratingBriefing, setIsGeneratingBriefing] = useState(false);
-  const [briefingError, setBriefingError] = useState<string | null>(null);
-  const [isBriefingDialogOpen, setIsBriefingDialogOpen] = useState(false);
-
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
@@ -139,8 +123,6 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
       setCurrentComments(task.comments || []);
       setSuggestedSubtasksList([]);
       setSubtasksError(null);
-      setMeetingBriefing(null);
-      setBriefingError(null);
     } else {
       form.reset({
         title: '',
@@ -157,8 +139,6 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
       setCurrentComments([]);
       setSuggestedSubtasksList([]);
       setSubtasksError(null);
-      setMeetingBriefing(null);
-      setBriefingError(null);
     }
   }, [task, form]);
 
@@ -282,39 +262,6 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
     }
   };
 
-  const handleGenerateBriefing = async () => {
-    if (!task) return; // Should only be callable if task exists
-
-    setIsGeneratingBriefing(true);
-    setBriefingError(null);
-    setMeetingBriefing(null);
-
-    const currentTaskData: Task = {
-        ...task, // Existing task data
-        ...form.getValues(), // Current form values (title, desc, status, etc.)
-        dueDate: form.getValues('dueDate') ? format(form.getValues('dueDate') as Date, 'yyyy-MM-dd') : undefined,
-        assignedTo: form.getValues('assignedTo') === UNASSIGNED_FORM_VALUE ? undefined : form.getValues('assignedTo'),
-        files: currentFiles,
-        comments: currentComments,
-    };
-    
-    try {
-      const result = await generateMeetingPrepBriefing({ task: currentTaskData });
-      setMeetingBriefing(result);
-      setIsBriefingDialogOpen(true); // Open the dialog with the briefing
-    } catch (e) {
-      console.error("Error generating meeting briefing:", e);
-      setBriefingError(e instanceof Error ? e.message : "Failed to generate meeting briefing.");
-      toast({
-        variant: "destructive",
-        title: "Briefing Generation Failed",
-        description: e instanceof Error ? e.message : "Could not retrieve meeting briefing.",
-      });
-    } finally {
-      setIsGeneratingBriefing(false);
-    }
-  };
-
 
   const handleAddComment = () => {
     if (!newCommentText.trim() || !user) return;
@@ -353,8 +300,6 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
     setSuggestedSubtasksList([]);
     setSubtasksError(null);
     setNewCommentText("");
-    setMeetingBriefing(null);
-    setBriefingError(null);
   };
 
   const handleFileAdd = () => {
@@ -372,21 +317,8 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
     setCurrentFiles(prev => prev.filter(f => f.id !== fileId));
   };
   
-  const renderBriefingList = (title: string, items: string[] | undefined) => {
-    if (!items || items.length === 0) return null;
-    return (
-      <div className="mt-3">
-        <h4 className="font-semibold text-sm text-muted-foreground mb-1">{title}:</h4>
-        <ul className="list-disc list-inside text-sm space-y-0.5">
-          {items.map((item, index) => <li key={index}>{item}</li>)}
-        </ul>
-      </div>
-    );
-  };
-
 
   return (
-    <>
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-4 p-1">
         <div>
@@ -408,7 +340,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
               variant="outline"
               size="sm"
               onClick={handleSuggestDetails}
-              disabled={isSuggestingDetails || !form.watch('title') || isSuggestingPriority || isSuggestingSubtasks || isGeneratingBriefing}
+              disabled={isSuggestingDetails || !form.watch('title') || isSuggestingPriority || isSuggestingSubtasks }
               className="text-xs flex-1"
             >
               {isSuggestingDetails ? (
@@ -435,7 +367,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
               variant="outline"
               size="sm"
               onClick={handleSuggestSubtasks}
-              disabled={isSuggestingSubtasks || !form.watch('title') || isSuggestingDetails || isSuggestingPriority || isGeneratingBriefing}
+              disabled={isSuggestingSubtasks || !form.watch('title') || isSuggestingDetails || isSuggestingPriority }
               className="w-full text-xs"
             >
               {isSuggestingSubtasks ? (
@@ -526,7 +458,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
                   variant="outline"
                   size="icon"
                   onClick={handleSuggestPriority}
-                  disabled={isSuggestingPriority || !form.watch('title') || isSuggestingDetails || isSuggestingSubtasks || isGeneratingBriefing}
+                  disabled={isSuggestingPriority || !form.watch('title') || isSuggestingDetails || isSuggestingSubtasks }
                   title="AI Suggest Priority"
                   className="p-2"
                 >
@@ -650,20 +582,6 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
                     <h3 className="text-lg font-medium flex items-center gap-2">
                         <MessageSquare className="h-5 w-5 text-primary" /> Comments
                     </h3>
-                    {task.comments && task.comments.length > 0 && (
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={handleGenerateBriefing}
-                            disabled={isGeneratingBriefing || isSuggestingDetails || isSuggestingPriority || isSuggestingSubtasks}
-                            className="text-xs"
-                            title="Get AI Meeting Prep Briefing for this task"
-                        >
-                            {isGeneratingBriefing ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <BookOpenCheck className="mr-1 h-3 w-3" />}
-                            Meeting Brief
-                        </Button>
-                    )}
                 </div>
               <div className="space-y-3 max-h-40 overflow-y-auto pr-2 border rounded-md p-3 bg-muted/20">
                 {currentComments.length === 0 && (
@@ -720,7 +638,7 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
         <Button type="button" variant="outline" onClick={() => onOpenChange?.(false)}>
           Cancel
         </Button>
-        <Button type="submit" disabled={form.formState.isSubmitting || isSuggestingDetails || isSuggestingSubtasks || isSuggestingPriority || isGeneratingBriefing}>
+        <Button type="submit" disabled={form.formState.isSubmitting || isSuggestingDetails || isSuggestingSubtasks || isSuggestingPriority }>
           {form.formState.isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -730,41 +648,5 @@ export function TaskForm({ task, onOpenChange }: TaskFormProps) {
         </Button>
       </div>
     </form>
-
-    {isBriefingDialogOpen && meetingBriefing && (
-        <AlertDialog open={isBriefingDialogOpen} onOpenChange={setIsBriefingDialogOpen}>
-          <AlertDialogContent className="sm:max-w-lg">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="flex items-center gap-2">
-                <BookOpenCheck className="h-5 w-5 text-primary" />
-                AI Meeting Briefing for: "{meetingBriefing.taskTitle}"
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                Use these points to prepare for discussions about this task.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div className="py-4 max-h-[60vh] overflow-y-auto pr-2 space-y-3">
-              <div>
-                <h3 className="font-semibold text-md">Task Overview:</h3>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{meetingBriefing.taskOverview}</p>
-              </div>
-              {renderBriefingList("Key Discussion Points", meetingBriefing.keyDiscussionPoints)}
-              {renderBriefingList("Identified Blockers", meetingBriefing.identifiedBlockers)}
-              {renderBriefingList("Suggested Agenda Items", meetingBriefing.suggestedAgendaItems)}
-              
-              {briefingError && (
-                <Alert variant="destructive" className="mt-3">
-                  <AlertTitle>Error</AlertTitle>
-                  <AlertDescription>{briefingError}</AlertDescription>
-                </Alert>
-              )}
-            </div>
-            <AlertDialogFooter>
-              <Button onClick={() => setIsBriefingDialogOpen(false)}>Close</Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
-    </>
   );
 }

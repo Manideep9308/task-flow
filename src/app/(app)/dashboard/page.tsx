@@ -6,7 +6,7 @@ import { useTasks } from '@/contexts/task-context';
 import { KANBAN_COLUMNS } from '@/lib/constants';
 import type { Task, TaskStatus } from '@/lib/types';
 import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
 import {
@@ -18,7 +18,10 @@ import {
 } from '@/components/ui/dialog';
 import { TaskForm } from '@/components/tasks/task-form';
 import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle as UiAlertTitle } from "@/components/ui/alert"; // Renamed AlertTitle to avoid conflict
+import { Card, CardContent, CardHeader, CardTitle as UiCardTitle } from '@/components/ui/card'; // Aliased CardTitle
+import { Badge } from '@/components/ui/badge';
+
 
 export default function DashboardPage() {
   const { tasks, getTasksByStatus, moveTask, isLoading: tasksLoading, error: taskError, setTasks: setGlobalTasks } = useTasks();
@@ -26,6 +29,7 @@ export default function DashboardPage() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { toast } = useToast();
+
 
   useEffect(() => {
     setIsMounted(true);
@@ -35,6 +39,7 @@ export default function DashboardPage() {
     setSelectedTask(task);
     setIsEditModalOpen(true);
   };
+
 
   const handleDrop = async (e: React.DragEvent<HTMLDivElement>, targetStatus: TaskStatus) => {
     e.preventDefault();
@@ -95,6 +100,8 @@ export default function DashboardPage() {
         toast({ title: "Task Moved", description: `Task "${currentTask.title}" moved to ${KANBAN_COLUMNS.find(c=>c.id===targetStatus)?.title}.` });
       } catch (apiError) {
         toast({ variant: "destructive", title: "Move Failed", description: `Could not move task. ${ (apiError as Error).message }` });
+        // Revert optimistic update on API error
+        setGlobalTasks(tasks);
       }
     }
   };
@@ -113,7 +120,7 @@ export default function DashboardPage() {
      return (
       <div className="container mx-auto py-10">
         <Alert variant="destructive">
-          <AlertTitle>Error Loading Tasks</AlertTitle>
+          <UiAlertTitle>Error Loading Tasks</UiAlertTitle>
           <AlertDescription>{taskError}</AlertDescription>
         </Alert>
       </div>
@@ -121,7 +128,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-col h-full p-2 md:p-4 space-y-4">
+    <div className="flex flex-col h-full px-2 md:px-4 pb-2 md:pb-4 space-y-4">
       {/* Kanban Board container */}
       <div className="flex gap-4 md:gap-6 flex-1 overflow-x-auto"> 
         {KANBAN_COLUMNS.map(column => (

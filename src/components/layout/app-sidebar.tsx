@@ -24,9 +24,9 @@ import {
     CalendarDays,
     ShieldCheck,
     MessageSquareText,
-    HelpCircle, // Changed from Route
     MessagesSquare,
-    BarChart3
+    BarChart3,
+    Clock, // Added Clock icon
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -37,7 +37,7 @@ const navItems = [
   { href: '/files', label: 'Files', icon: FileArchive },
   { href: '/summary', label: 'Summary', icon: ScrollText },
   { href: '/standup-history', label: 'Standups', icon: MessageSquareText },
-  { href: '/time-travel', label: 'What-If Analyzer', icon: HelpCircle }, // Updated label and icon
+  { href: '/time-travel', label: 'Time Travel', icon: Clock }, // Changed label and icon
   { href: '/team-chat', label: 'Team Chat', icon: MessagesSquare },
   { href: '/reports', label: 'Reports', icon: BarChart3 },
 ];
@@ -55,8 +55,10 @@ export function AppSidebar() {
     if (user?.role === 'admin') {
       const reportsIndex = items.findIndex(item => item.href === '/reports');
       if (reportsIndex !== -1 && reportsIndex < items.length -1) {
+        // Insert admin items after 'Reports' if 'Reports' exists and is not the last item
         items.splice(reportsIndex + 1, 0, ...adminNavItems);
       } else {
+         // Otherwise, append admin items to the end or after reports if reports is last
         items = [...items, ...adminNavItems];
       }
     }

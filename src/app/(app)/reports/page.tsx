@@ -1,21 +1,24 @@
 
 "use client";
 
-import React from "react"; // Added React import
+import React from "react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Wand2, AlertTriangle, FileText, BarChart3, Zap, Lightbulb, AlertOctagon, Trophy, CheckCircle, Target, History, Activity, Brain } from "lucide-react";
+import { Loader2, Wand2, AlertTriangle, FileText, BarChart3, Zap, Lightbulb, AlertOctagon, Trophy, CheckCircle, Target, History, Activity, Brain, TrendingUp, Gauge } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useTasks } from "@/contexts/task-context";
-import type { ProjectTaskSnapshot, GenerateProjectHealthReportOutput, GenerateProjectHealthReportInput, RetrospectiveReportOutput, GenerateRetrospectiveReportInput } from "@/lib/types";
+import { useAuth } from "@/contexts/auth-context"; // For top contributors
+import type { ProjectTaskSnapshot, GenerateProjectHealthReportOutput, GenerateProjectHealthReportInput, RetrospectiveReportOutput, GenerateRetrospectiveReportInput, Task } from "@/lib/types";
 import { generateProjectHealthReport } from "@/ai/flows/generate-project-health-report-flow";
 import { generateRetrospectiveReport } from "@/ai/flows/generate-retrospective-report-flow";
 import { Separator } from "@/components/ui/separator";
-import { format } from 'date-fns';
+import { format, subDays } from 'date-fns';
 
 export default function ReportsPage() {
   const { tasks, isLoading: tasksLoading } = useTasks();
+  const { assignableUsers } = useAuth(); // For mocking top contributors
+
   const [healthReport, setHealthReport] = useState<GenerateProjectHealthReportOutput | null>(null);
   const [isLoadingHealthReport, setIsLoadingHealthReport] = useState(false);
   const [healthReportError, setHealthReportError] = useState<string | null>(null);
@@ -28,7 +31,7 @@ export default function ReportsPage() {
   const handleGenerateHealthReport = async () => {
     setIsLoadingHealthReport(true);
     setHealthReportError(null);
-    setHealthReport(null); // Clear previous report
+    setHealthReport(null); 
 
     const mappedTasks: ProjectTaskSnapshot[] = tasks.map(t => ({
       id: t.id,
@@ -61,9 +64,9 @@ export default function ReportsPage() {
   const handleGenerateRetrospective = async () => {
     setIsLoadingRetrospective(true);
     setRetrospectiveError(null);
-    setRetrospectiveReport(null); // Clear previous report
+    setRetrospectiveReport(null); 
 
-    const mappedTasks: ProjectTaskSnapshot[] = tasks.map(t => ({
+    const mappedTasksForRetrospective: ProjectTaskSnapshot[] = tasks.map(t => ({
       id: t.id,
       title: t.title,
       description: t.description,
@@ -74,10 +77,27 @@ export default function ReportsPage() {
       category: t.category,
     }));
 
+    const totalTasks = tasks.length;
+    const tasksCompleted = tasks.filter(t => t.status === 'done').length;
+    const tasksIncomplete = totalTasks - tasksCompleted;
+    const tasksDelayed = tasks.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'done').length;
+    // Mocking some values as we don't have explicit data for all fields
+    const mockTopContributors = assignableUsers.slice(0, 2).map(u => u.name || u.email);
+
     const input: GenerateRetrospectiveReportInput = {
-      tasks: mappedTasks,
+      tasks: mappedTasksForRetrospective,
       projectName: "TaskFlow Project (Demo)",
-      projectEndDate: format(new Date(), "yyyy-MM-dd"), // Assuming project conceptually "ends" today for the mock
+      startDate: format(subDays(new Date(), 30), "yyyy-MM-dd"), // Mock start date (30 days ago)
+      endDate: format(new Date(), "yyyy-MM-dd"), // Mock end date (today)
+      totalTasks,
+      tasksCompleted,
+      tasksIncomplete,
+      tasksDelayed,
+      tasksBlocked: tasks.filter(t => t.description?.toLowerCase().includes("blocker") || t.title?.toLowerCase().includes("blocked")).length || 0, // Simple mock for blocked
+      topContributors: mockTopContributors,
+      activityLogs: "Mock Activity Log: Team started sprint 1. Feature X completed. Daily standups held. Minor deployment issue resolved.",
+      issueSummary: "Mock Issue Summary: Initial setup took longer than expected. One critical bug found and fixed pre-release. Some scope creep discussions.",
+      timelineEvents: "Mock Timeline Events: Project Kickoff -> Sprint 1 Planning -> Mid-sprint Review -> Sprint 1 Completion -> User Testing Phase 1 -> Final Review.",
     };
 
     try {
@@ -94,32 +114,36 @@ export default function ReportsPage() {
 
   const renderFormattedText = (text: string | undefined | null): React.ReactNode => {
     if (!text) return null;
-  
-    // Split by explicit escaped newlines from AI or actual newlines
-    const lines = text.split(/\\n|\n/);
-  
-    return lines.map((line, index) => {
-      // Further process each line for potential bullet points or other formatting
-      const trimmedLine = line.trim();
-      let lineContent: React.ReactNode = trimmedLine;
-  
-      if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ') || trimmedLine.startsWith('• ')) {
-        // Simple bullet point handling
-        lineContent = <span className="flex"><span className="mr-2">{trimmedLine.substring(0, 2)}</span><span>{trimmedLine.substring(2)}</span></span>;
-      } else if (/^\d+\.\s/.test(trimmedLine)) {
-        // Simple numbered list item handling
-        const parts = trimmedLine.match(/^(\d+\.)\s*(.*)/);
-        if (parts) {
-          lineContent = <span className="flex"><span className="mr-2">{parts[1]}</span><span>{parts[2]}</span></span>;
+    
+    return text.split('\n').map((line, index, array) => {
+        const trimmedLine = line.trim();
+        let lineContent: React.ReactNode = trimmedLine;
+
+        if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ') || trimmedLine.startsWith('• ')) {
+            lineContent = (
+                <span className="flex items-start">
+                    <span className="mr-2 text-primary">{trimmedLine.substring(0, 2)}</span>
+                    <span>{trimmedLine.substring(2)}</span>
+                </span>
+            );
+        } else if (/^\d+\.\s/.test(trimmedLine)) {
+            const parts = trimmedLine.match(/^(\d+\.)\s*(.*)/);
+            if (parts) {
+                lineContent = (
+                    <span className="flex items-start">
+                        <span className="mr-2 text-primary">{parts[1]}</span>
+                        <span>{parts[2]}</span>
+                    </span>
+                );
+            }
         }
-      }
-  
-      return (
-        <React.Fragment key={index}>
-          {lineContent}
-          {index < lines.length - 1 && <br />}
-        </React.Fragment>
-      );
+        
+        return (
+            <React.Fragment key={index}>
+                {lineContent}
+                {index < array.length - 1 && <br />}
+            </React.Fragment>
+        );
     });
   };
 
@@ -299,12 +323,12 @@ export default function ReportsPage() {
               <CardHeader>
                 <div className="flex justify-between items-center">
                   <CardTitle className="text-xl text-purple-400">
-                    Retrospective Report
+                    Project Retrospective Report
                     {retrospectiveReport.projectName && ` for ${retrospectiveReport.projectName}`}
                   </CardTitle>
                   {retrospectiveReport.projectEndDate && (
                     <span className="text-sm text-muted-foreground">
-                      Project End Date (Conceptual): {format(new Date(retrospectiveReport.projectEndDate), "PPP")}
+                      Conceptual End Date: {format(new Date(retrospectiveReport.projectEndDate), "PPP")}
                     </span>
                   )}
                 </div>
@@ -319,16 +343,23 @@ export default function ReportsPage() {
                 <Separator/>
                 <div className="p-3 rounded-md bg-muted/30">
                   <h4 className="font-semibold text-lg flex items-center gap-2 mb-1 text-orange-400">
-                    <AlertTriangle className="h-5 w-5"/> Challenges / What Didn't Go Well
+                    <AlertTriangle className="h-5 w-5"/> What Didn’t Go Well
                   </h4>
                   <div className="text-muted-foreground prose prose-sm dark:prose-invert max-w-none">{renderFormattedText(retrospectiveReport.challenges)}</div>
                 </div>
                 <Separator/>
                 <div className="p-3 rounded-md bg-muted/30">
                   <h4 className="font-semibold text-lg flex items-center gap-2 mb-1 text-blue-400">
-                    <Brain className="h-5 w-5"/> Learnings & Improvement Suggestions
+                    <Brain className="h-5 w-5"/> Improvement Suggestions
                   </h4>
                   <div className="text-muted-foreground prose prose-sm dark:prose-invert max-w-none">{renderFormattedText(retrospectiveReport.learningsAndImprovements)}</div>
+                </div>
+                 <Separator/>
+                <div className="p-3 rounded-md bg-muted/30">
+                  <h4 className="font-semibold text-lg flex items-center gap-2 mb-1 text-indigo-400">
+                    <Gauge className="h-5 w-5"/> Performance Metrics Summary
+                  </h4>
+                  <div className="text-muted-foreground prose prose-sm dark:prose-invert max-w-none">{renderFormattedText(retrospectiveReport.performanceMetricsSummary)}</div>
                 </div>
                 {retrospectiveReport.overallProjectSentiment && (
                   <>

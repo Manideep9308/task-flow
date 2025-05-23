@@ -169,16 +169,28 @@ export interface AssistantTaskQueryCriteria {
 
 // For Auto Retrospective Generator
 export interface GenerateRetrospectiveReportInput {
-  tasks: ProjectTaskSnapshot[];
   projectName?: string;
-  projectEndDate?: string; // YYYY-MM-DD, conceptual end date
+  startDate?: string; // YYYY-MM-DD
+  endDate?: string; // YYYY-MM-DD
+  totalTasks: number;
+  tasksCompleted: number;
+  tasksIncomplete: number;
+  tasksDelayed: number;
+  tasksBlocked: number;
+  topContributors: string[]; // Array of user names or IDs
+  activityLogs: string; // Could be a long string or structured differently in a real app
+  issueSummary: string; // Summary of key issues
+  timelineEvents: string; // Key events in the project timeline
+  // We keep tasks for detailed analysis by the AI, even if summarized stats are also passed
+  tasks: ProjectTaskSnapshot[];
 }
 
 export interface RetrospectiveReportOutput {
   wentWell: string;
-  challenges: string;
-  learningsAndImprovements: string;
-  overallProjectSentiment?: string;
+  challenges: string; // Corresponds to "What Didn’t Go Well"
+  learningsAndImprovements: string; // Corresponds to "Improvement Suggestions"
+  performanceMetricsSummary: string; // New field
+  overallProjectSentiment?: string; // Kept from previous version, can be useful
   projectName?: string;
-  projectEndDate?: string;
+  projectEndDate?: string; // This was used as "endDate" conceptually
 }

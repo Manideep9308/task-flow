@@ -12,7 +12,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import type { TaskStatus, TaskPriority } from '@/lib/types';
 
-// Re-using ProjectTaskSnapshotSchema from project health report for input consistency
+// Re-using ProjectTaskSnapshotSchema for the tasks array within the input
 const ProjectTaskSnapshotSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -25,26 +25,41 @@ const ProjectTaskSnapshotSchema = z.object({
 });
 
 const GenerateRetrospectiveReportInputSchema = z.object({
-  tasks: z.array(ProjectTaskSnapshotSchema).describe("A list of all tasks considered part of the 'completed' project or phase."),
-  projectName: z.string().optional().describe("The name of the project for which the retrospective is being generated."),
-  projectEndDate: z.string().optional().describe("The conceptual end date of the project (YYYY-MM-DD). Helps in analyzing timeliness."),
+  projectName: z.string().optional().describe("The name of the project."),
+  startDate: z.string().optional().describe("The start date of the project (YYYY-MM-DD)."),
+  endDate: z.string().optional().describe("The end date of the project (YYYY-MM-DD)."),
+  totalTasks: z.number().describe("Total number of tasks in the project."),
+  tasksCompleted: z.number().describe("Number of tasks marked as completed."),
+  tasksIncomplete: z.number().describe("Number of tasks not yet completed."),
+  tasksDelayed: z.number().describe("Number of tasks that were delayed (e.g., completed past due date or still open past due date)."),
+  tasksBlocked: z.number().describe("Number of tasks that were explicitly marked or identified as blocked."),
+  topContributors: z.array(z.string()).describe("A list of names or IDs of top contributors to the project."),
+  activityLogs: z.string().describe("A summary or log of key activities during the project."),
+  issueSummary: z.string().describe("A summary of key issues encountered during the project."),
+  timelineEvents: z.string().describe("A string describing key events or milestones in the project timeline."),
+  tasks: z.array(ProjectTaskSnapshotSchema).describe("A list of all tasks considered part of the 'completed' project or phase, for detailed AI analysis."),
 });
 export type GenerateRetrospectiveReportInput = z.infer<typeof GenerateRetrospectiveReportInputSchema>;
 
 const RetrospectiveReportOutputSchema = z.object({
-  wentWell: z.string().describe("A summary of what went well during the project. Focus on successes, timely completions (consider due dates vs. 'done' status for tasks), positive trends, and effective collaboration if inferable."),
-  challenges: z.string().describe("A summary of what didn't go well or challenges faced. Identify overdue tasks (compare due dates with projectEndDate and 'done' status), recurring blockers (if patterns exist in descriptions/titles), scope creep, or areas of struggle."),
-  learningsAndImprovements: z.string().describe("Actionable suggestions for improvements in future projects. These should be based on the 'went well' and 'challenges' sections. Focus on process changes, tool adoption, communication strategies, etc."),
-  overallProjectSentiment: z.string().optional().describe("A brief qualitative assessment of the overall project journey and outcome, if inferable from the task data (e.g., 'Successfully completed despite initial delays', 'Challenging but delivered key objectives', 'Struggled with scope and deadlines')."),
+  wentWell: z.string().describe("A summary of what went well during the project, as 2-3 bullet points."),
+  challenges: z.string().describe("A summary of main pain points, delays, and blockers encountered."),
+  learningsAndImprovements: z.string().describe("A list of 2-3 actionable process or communication improvements for future projects."),
+  performanceMetricsSummary: z.string().describe("A summary of performance metrics like completion rate, average delay per task (if calculable), contributor performance insights, and sprint velocity (if applicable)."),
+  overallProjectSentiment: z.string().optional().describe("A brief qualitative assessment of the overall project journey and outcome."),
   projectName: z.string().optional(),
-  projectEndDate: z.string().optional(),
+  projectEndDate: z.string().optional(), // Corresponds to 'endDate' from input
 });
 export type RetrospectiveReportOutput = z.infer<typeof RetrospectiveReportOutputSchema>;
 
 export async function generateRetrospectiveReport(input: GenerateRetrospectiveReportInput): Promise<RetrospectiveReportOutput> {
+  // Ensure projectEndDate in output matches endDate from input if provided
   const reportInput = {
     ...input,
-    projectEndDate: input.projectEndDate || new Date().toISOString().split('T')[0], // Default to today if not provided
+    endDate: input.endDate || input.tasks.length > 0 ? input.tasks.reduce((latest, task) => { // Fallback if endDate not given
+        const taskDate = task.dueDate ? new Date(task.dueDate) : new Date(0);
+        return taskDate > latest ? taskDate : latest;
+      }, new Date(0)).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
   };
   return generateRetrospectiveReportFlow(reportInput);
 }
@@ -53,11 +68,33 @@ const prompt = ai.definePrompt({
   name: 'generateRetrospectiveReportPrompt',
   input: {schema: GenerateRetrospectiveReportInputSchema},
   output: {schema: RetrospectiveReportOutputSchema},
-  prompt: `You are an expert project analyst conducting a post-project retrospective.
-Assume the provided list of tasks represents a project or project phase that has now concluded as of {{{projectEndDate}}}.
-Project Name: {{{projectName}}}
+  prompt: `
+You are an expert project analyst. Based on the following data, generate a structured project retrospective report.
 
-Analyze the following tasks:
+### Project Info:
+Project Name: {{#if projectName}}{{projectName}}{{else}}N/A{{/if}}
+Start Date: {{#if startDate}}{{startDate}}{{else}}N/A{{/if}}
+End Date: {{#if endDate}}{{endDate}}{{else}}N/A{{/if}}
+
+### Task Summary:
+Total Tasks: {{totalTasks}}
+Completed: {{tasksCompleted}}
+Incomplete: {{tasksIncomplete}}
+Delayed Tasks: {{tasksDelayed}}
+Blocked Tasks: {{tasksBlocked}}
+Top Contributors: {{#if topContributors}}{{#each topContributors}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}N/A{{/if}}
+
+### Activity Logs:
+{{{activityLogs}}}
+
+### Key Issues Reported:
+{{{issueSummary}}}
+
+### Project Timeline Overview:
+{{{timelineEvents}}}
+
+---
+Analyze the detailed task list provided below to inform your report:
 {{#each tasks}}
 - Task: "{{{title}}}" (ID: {{{id}}})
   Status: {{{status}}}
@@ -67,27 +104,24 @@ Analyze the following tasks:
   {{#if category}}Category: {{{category}}}{{/if}}
   {{#if description}}Description: {{{description}}}{{/if}}
 {{/each}}
+---
 
-Based on this task data, please generate a retrospective report with the following sections:
+### Your Output Format:
+**Project Retrospective Report – {{#if projectName}}{{projectName}}{{else}}N/A{{/if}}**
 
-1.  **What Went Well**:
-    *   Identify successes. Were critical tasks completed? Were tasks marked 'done' generally on time (compare dueDate with projectEndDate, considering a task 'done' means it was completed by projectEndDate)?
-    *   Highlight any positive trends or patterns inferable from task titles, descriptions, or categories (e.g., 'Successful launch of X', 'Efficient collaboration on Y').
-    *   Mention aspects that likely contributed to success (e.g., clear task descriptions, high completion rate of high-priority tasks).
+1.  🟢 **What Went Well**
+    - (Summarize 2–3 key successes with bullet points based on the provided data, especially completed tasks and positive activity logs.)
 
-2.  **Challenges / What Didn't Go Well**:
-    *   Identify tasks that were problematic. Were there many overdue tasks (status not 'done' by their dueDate, or dueDate past projectEndDate)?
-    *   Point out recurring issues if visible in descriptions or titles (e.g., "repeated delays in component Z", "blocker mentioned in several tasks").
-    *   Were there significant priority shifts or tasks stuck in 'inprogress' for long periods relative to their due dates?
+2.  🔴 **What Didn’t Go Well**
+    - (Summarize main pain points, delays, blockers based on the task summary stats like delayed/incomplete tasks, issue summary, and task details.)
 
-3.  **Learnings and Improvement Suggestions**:
-    *   Based on the 'What Went Well' and 'Challenges' sections, provide 2-4 actionable suggestions for future projects.
-    *   These could relate to planning, execution, communication, resource allocation (if inferable), or risk management. Be specific. For example, "Implement clearer dependency tracking for critical path tasks" or "Hold weekly brief check-ins for high-risk phases."
+3.  💡 **Improvement Suggestions**
+    - (List 2–3 actionable process or communication improvements based on the challenges identified. Be specific.)
 
-4.  **Overall Project Sentiment (Optional)**:
-    *   Provide a brief, qualitative summary of the project's journey if you can infer one from the data (e.g., 'Smooth execution with all targets met', 'Successfully navigated several obstacles to deliver key results', 'Faced significant challenges impacting timelines and scope').
+4.  📈 **Performance Metrics Summary**
+    - (Analyze the provided Task Summary stats: Calculate completion rate (tasksCompleted / totalTasks). Comment on contributor performance based on 'topContributors' and task assignments if possible. Discuss task delays and blockages. If concepts like sprint velocity are mentioned in logs or events, incorporate them. Otherwise, focus on the provided metrics.)
 
-Ensure your analysis is grounded in the provided task data. Use the projectEndDate of {{{projectEndDate}}} as the reference for "completion."
+Provide insights in a professional tone. Be concise, constructive, and unbiased. Avoid repetition. Use markdown-style formatting with bullet points where applicable.
 `,
 });
 
@@ -103,8 +137,9 @@ const generateRetrospectiveReportFlow = ai.defineFlow(
         wentWell: "No task data provided. Cannot generate a retrospective report.",
         challenges: "N/A",
         learningsAndImprovements: "N/A",
+        performanceMetricsSummary: "N/A. No task data to calculate metrics.",
         projectName: input.projectName,
-        projectEndDate: input.projectEndDate,
+        projectEndDate: input.endDate,
       };
     }
     const {output} = await prompt(input);
@@ -114,7 +149,7 @@ const generateRetrospectiveReportFlow = ai.defineFlow(
     return {
       ...output,
       projectName: input.projectName || output.projectName,
-      projectEndDate: input.projectEndDate || output.projectEndDate,
+      projectEndDate: input.endDate || output.projectEndDate, // Ensure endDate is passed through
     };
   }
 );

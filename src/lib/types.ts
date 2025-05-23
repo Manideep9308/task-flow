@@ -61,7 +61,7 @@ export interface StandupSummary {
   projectId?: string; // Optional: if summaries are per-project
 }
 
-// For Predict Timeline Impact Flow
+// For Predict Timeline Impact Flow / Time Travel / What-If Analyzer
 export interface AffectedTask {
   taskId: string;
   title: string;
@@ -85,7 +85,7 @@ export interface TaskSnapshot {
   dueDate?: string;
   assignedTo?: string;
   description?: string;
-  category?: string; // Added category
+  category?: string;
 }
 
 export interface PredictTimelineImpactInput {
@@ -139,11 +139,11 @@ export interface GenerateProjectHealthReportInput {
 
 export interface ProjectHealthReport {
   overallSummary: string;
-  riskAssessment: string; // Could detail overdue tasks, high-priority pile-ups
-  keyHighlights: string; // Positive developments, completed milestones
+  riskAssessment: string;
+  keyHighlights: string;
   blockersAndChallenges: string;
   actionableRecommendations: string;
-  keyFocusAreas?: string; // New field for targeted focus points
+  keyFocusAreas?: string;
   reportDate?: string;
   projectName?: string;
 }
@@ -155,4 +155,30 @@ export interface AssistantMessage {
   sender: 'user' | 'assistant';
   text: string;
   timestamp: string;
+}
+
+// For App Assistant Tool (Task Querying)
+export interface AssistantTaskQueryCriteria {
+  status?: TaskStatus;
+  priority?: TaskPriority;
+  assigneeName?: string;
+  keywords?: string;
+  dueDateBefore?: string; // YYYY-MM-DD
+  dueDateAfter?: string; // YYYY-MM-DD
+}
+
+// For Auto Retrospective Generator
+export interface GenerateRetrospectiveReportInput {
+  tasks: ProjectTaskSnapshot[];
+  projectName?: string;
+  projectEndDate?: string; // YYYY-MM-DD, conceptual end date
+}
+
+export interface RetrospectiveReportOutput {
+  wentWell: string;
+  challenges: string;
+  learningsAndImprovements: string;
+  overallProjectSentiment?: string;
+  projectName?: string;
+  projectEndDate?: string;
 }

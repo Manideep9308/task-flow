@@ -214,3 +214,16 @@ export interface ValidateProjectPremiseOutput {
   potentialRisks: ValidationSection;
   alternativePerspectives: ValidationSection;
 }
+
+// For AI Meeting Prep Assistant
+export interface MeetingPrepBriefingInput {
+  task: Task; // Full task object including comments
+}
+
+export interface MeetingPrepBriefingOutput {
+  taskTitle: string;
+  taskOverview: string;         // AI summary of purpose and current state
+  keyDiscussionPoints: string[]; // e.g., "Clarity needed on X", "Decision required for Y"
+  identifiedBlockers: string[];  // if any explicitly found in description/comments
+  suggestedAgendaItems: string[];// e.g., "Confirm due date feasibility", "Assign sub-tasks for Z"
+}

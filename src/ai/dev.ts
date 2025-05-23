@@ -13,3 +13,4 @@ import '@/ai/flows/generate-chat-highlights-flow.ts';
 import '@/ai/flows/generate-project-health-report-flow.ts';
 import '@/ai/flows/app-assistant-flow.ts';
 import '@/ai/flows/generate-retrospective-report-flow.ts';
+import '@/ai/flows/validate-project-premise-flow.ts';

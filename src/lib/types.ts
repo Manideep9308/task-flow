@@ -194,3 +194,23 @@ export interface RetrospectiveReportOutput {
   projectName?: string;
   projectEndDate?: string; // This was used as "endDate" conceptually
 }
+
+// For Project Premise Validator / Idea Stress Test
+export interface ValidateProjectPremiseInput {
+  projectIdea: string;
+  coreProblemSolved: string;
+  targetAudience: string;
+  keyGoals: string[]; // Array of strings for goals
+}
+
+export interface ValidationSection {
+  title: string;
+  points: string[];
+}
+
+export interface ValidateProjectPremiseOutput {
+  potentialBlindSpots: ValidationSection;
+  challengingQuestions: ValidationSection;
+  potentialRisks: ValidationSection;
+  alternativePerspectives: ValidationSection;
+}

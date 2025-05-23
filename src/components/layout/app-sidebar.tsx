@@ -26,7 +26,8 @@ import {
     MessageSquareText,
     MessagesSquare,
     BarChart3,
-    Clock, // Added Clock icon
+    Clock,
+    Lightbulb, // Added Lightbulb icon
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -37,9 +38,10 @@ const navItems = [
   { href: '/files', label: 'Files', icon: FileArchive },
   { href: '/summary', label: 'Summary', icon: ScrollText },
   { href: '/standup-history', label: 'Standups', icon: MessageSquareText },
-  { href: '/time-travel', label: 'Time Travel', icon: Clock }, // Changed label and icon
+  { href: '/time-travel', label: 'Time Travel', icon: Clock },
   { href: '/team-chat', label: 'Team Chat', icon: MessagesSquare },
   { href: '/reports', label: 'Reports', icon: BarChart3 },
+  { href: '/idea-validator', label: 'Idea Validator', icon: Lightbulb }, // New Item
 ];
 
 const adminNavItems = [
@@ -53,12 +55,11 @@ export function AppSidebar() {
   const getAvailableNavItems = () => {
     let items = [...navItems];
     if (user?.role === 'admin') {
-      const reportsIndex = items.findIndex(item => item.href === '/reports');
-      if (reportsIndex !== -1 && reportsIndex < items.length -1) {
-        // Insert admin items after 'Reports' if 'Reports' exists and is not the last item
-        items.splice(reportsIndex + 1, 0, ...adminNavItems);
+      // Find an appropriate place to insert admin items, e.g., after 'Idea Validator'
+      const ideaValidatorIndex = items.findIndex(item => item.href === '/idea-validator');
+      if (ideaValidatorIndex !== -1 && ideaValidatorIndex < items.length -1) {
+        items.splice(ideaValidatorIndex + 1, 0, ...adminNavItems);
       } else {
-         // Otherwise, append admin items to the end or after reports if reports is last
         items = [...items, ...adminNavItems];
       }
     }

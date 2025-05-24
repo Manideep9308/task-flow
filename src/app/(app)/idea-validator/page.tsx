@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Loader2, Wand2, AlertTriangle, Lightbulb, HelpCircle, SearchCheck, Eye, MessageSquareQuote, Shuffle, Trash2, Zap } from "lucide-react";
+import { Loader2, Wand2, AlertTriangle, Lightbulb, HelpCircle, SearchCheck, Eye, MessageSquareQuote, Shuffle, Trash2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { validateProjectPremise, type ValidateProjectPremiseInput, type ValidateProjectPremiseOutput, type ValidationSection } from "@/ai/flows/validate-project-premise-flow";
 import { Separator } from "@/components/ui/separator";
@@ -16,7 +16,7 @@ import { Separator } from "@/components/ui/separator";
 const iconMap: Record<string, React.ElementType> = {
   "Potential Blind Spots": Eye,
   "Challenging Questions": MessageSquareQuote,
-  "Potential Risks": AlertTriangle, // Changed from Zap
+  "Potential Risks": AlertTriangle,
   "Alternative Perspectives": Shuffle,
 };
 

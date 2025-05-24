@@ -34,7 +34,7 @@ export function AppHeader() {
         ) : user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
+              <Button variant="ghost" size="icon" className="rounded-full" aria-label="User menu">
                 <UserCircle className="h-6 w-6" />
                 <span className="sr-only">Toggle user menu</span>
               </Button>

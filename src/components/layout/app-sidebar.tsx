@@ -27,7 +27,8 @@ import {
     MessagesSquare,
     BarChart3,
     Clock,
-    Lightbulb, // Added Lightbulb icon
+    Lightbulb,
+    HelpCircle, 
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -41,7 +42,7 @@ const navItems = [
   { href: '/time-travel', label: 'Time Travel', icon: Clock },
   { href: '/team-chat', label: 'Team Chat', icon: MessagesSquare },
   { href: '/reports', label: 'Reports', icon: BarChart3 },
-  { href: '/idea-validator', label: 'Idea Validator', icon: Lightbulb }, // New Item
+  { href: '/idea-validator', label: 'Idea Validator', icon: Lightbulb },
 ];
 
 const adminNavItems = [
@@ -55,7 +56,6 @@ export function AppSidebar() {
   const getAvailableNavItems = () => {
     let items = [...navItems];
     if (user?.role === 'admin') {
-      // Find an appropriate place to insert admin items, e.g., after 'Idea Validator'
       const ideaValidatorIndex = items.findIndex(item => item.href === '/idea-validator');
       if (ideaValidatorIndex !== -1 && ideaValidatorIndex < items.length -1) {
         items.splice(ideaValidatorIndex + 1, 0, ...adminNavItems);
@@ -74,7 +74,7 @@ export function AppSidebar() {
       <SidebarHeader className="p-4">
         <div className="hidden md:flex items-center justify-center gap-2 p-2 group-data-[state=collapsed]:hidden">
            <ClipboardCheck className="h-8 w-8 text-primary" />
-           <span className="text-2xl font-bold">TaskFlow</span>
+           <span className="text-2xl font-bold">IntelliTrack</span>
         </div>
          <div className="hidden md:flex items-center justify-center group-data-[state=expanded]:hidden py-2">
             <ClipboardCheck className="h-8 w-8 text-primary" />

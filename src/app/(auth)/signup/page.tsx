@@ -35,7 +35,7 @@ export default function SignupPage() {
             <ClipboardCheck className="h-12 w-12 text-primary" />
           </div>
           <CardTitle className="text-3xl font-bold">Create Account</CardTitle>
-          <CardDescription>Join TaskFlow and start managing your tasks.</CardDescription>
+          <CardDescription>Join IntelliTrack and start managing your tasks.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">

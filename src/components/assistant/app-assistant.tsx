@@ -20,7 +20,7 @@ export function AppAssistant() {
   const [userInput, setUserInput] = useState('');
   const [isLoadingResponse, setIsLoadingResponse] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const { tasks } = useTasks(); // Get current tasks for context
+  const { tasks } = useTasks(); 
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
@@ -49,15 +49,21 @@ export function AppAssistant() {
     setUserInput('');
     setIsLoadingResponse(true);
 
-    // Prepare task context (simple string of titles and statuses)
-    const taskContextString = tasks.slice(0, 10) // Limit context size
-      .map(t => `${t.title} (Status: ${t.status})`)
-      .join(', ');
+    const mappedTasksForAssistant = tasks.map(t => ({ // Map to AssistantTask schema
+      id: t.id,
+      title: t.title,
+      status: t.status,
+      priority: t.priority,
+      assignedTo: t.assignedTo,
+      description: t.description,
+      category: t.category,
+      dueDate: t.dueDate
+    }));
 
     try {
       const aiResponse = await processUserQuery({ 
         userInput: userMessage.text,
-        taskContext: taskContextString 
+        tasks: mappedTasksForAssistant
       });
       
       const assistantMessage: AssistantMessage = {
@@ -87,7 +93,7 @@ export function AppAssistant() {
         {
           id: uuidv4(),
           sender: 'assistant',
-          text: "Hello! I'm your TaskFlow assistant. How can I help you today? You can ask about app features or your tasks.",
+          text: "Hello! I'm your IntelliTrack assistant. How can I help you today? You can ask about app features or your tasks.",
           timestamp: new Date().toISOString(),
         }
       ]);
@@ -114,7 +120,7 @@ export function AppAssistant() {
               <Bot className="h-5 w-5 text-primary" /> AI Assistant
             </SheetTitle>
             <SheetDescription>
-              Ask questions about TaskFlow or your tasks.
+              Ask questions about IntelliTrack or your tasks.
             </SheetDescription>
           </SheetHeader>
           

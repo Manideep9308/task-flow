@@ -46,7 +46,7 @@ export default function ReportsPage() {
 
     const input: GenerateProjectHealthReportInput = {
       tasks: mappedTasks,
-      projectName: "TaskFlow Project (Demo)",
+      projectName: "IntelliTrack Project (Demo)",
       reportDate: format(new Date(), "yyyy-MM-dd"),
     };
 
@@ -85,7 +85,7 @@ export default function ReportsPage() {
 
     const input: GenerateRetrospectiveReportInput = {
       tasks: mappedTasksForRetrospective,
-      projectName: "TaskFlow Project (Demo)",
+      projectName: "IntelliTrack Project (Demo)",
       startDate: format(subDays(new Date(), 30), "yyyy-MM-dd"), 
       endDate: format(new Date(), "yyyy-MM-dd"), 
       totalTasks,
@@ -113,37 +113,52 @@ export default function ReportsPage() {
   const renderFormattedText = (text: string | undefined | null): React.ReactNode => {
     if (!text) return null;
     
-    return text.split('\n').map((line, index, array) => {
-        const trimmedLine = line.trim();
-        let lineContent: React.ReactNode = trimmedLine;
+    // Split by newline, then process each line for markdown-like features
+    const lines = text.split('\n');
+    
+    return lines.map((line, index) => {
+        let lineContent: React.ReactNode = line.trim();
 
-        if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ') || trimmedLine.startsWith('• ')) {
+        // Basic Bold: **text**
+        lineContent = String(lineContent).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
+        // Basic Italics: *text* or _text_
+        lineContent = String(lineContent).replace(/(\*|_)(.*?)\1/g, '<em>$2</em>');
+        
+        // Basic Unordered List Items: - item or * item or • item
+        if (line.trim().startsWith('- ') || line.trim().startsWith('* ') || line.trim().startsWith('• ')) {
             lineContent = (
                 <span className="flex items-start">
-                    <span className="mr-2 text-primary">{trimmedLine.substring(0, 2)}</span>
-                    <span>{trimmedLine.substring(2)}</span>
+                    <span className="mr-2 text-primary">{line.trim().substring(0, 1)}</span>
+                    <span>{line.trim().substring(2)}</span>
                 </span>
             );
-        } else if (/^\d+\.\s/.test(trimmedLine)) {
-            const parts = trimmedLine.match(/^(\d+\.)\s*(.*)/);
+        } 
+        // Basic Ordered List Items: 1. item
+        else if (/^\d+\.\s/.test(line.trim())) {
+            const parts = line.trim().match(/^(\d+\.)\s*(.*)/);
             if (parts) {
                 lineContent = (
                     <span className="flex items-start">
                         <span className="mr-2 text-primary">{parts[1]}</span>
-                        <span>{parts[2]}</span>
+                        <span dangerouslySetInnerHTML={{ __html: parts[2] }} /> {/* Render remaining part as HTML for nested strong/em */}
                     </span>
                 );
+            } else {
+                 lineContent = <span dangerouslySetInnerHTML={{ __html: String(lineContent) }} />
             }
+        } else {
+            lineContent = <span dangerouslySetInnerHTML={{ __html: String(lineContent) }} />
         }
         
         return (
-            <React.Fragment key={index}>
-                {lineContent}
-                {index < array.length - 1 && <br />}
-            </React.Fragment>
+          <React.Fragment key={index}>
+            {lineContent}
+            {index < lines.length - 1 && <br />}
+          </React.Fragment>
         );
     });
-  };
+};
 
 
   return (

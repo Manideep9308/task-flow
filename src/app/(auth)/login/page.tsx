@@ -30,7 +30,7 @@ export default function LoginPage() {
             <ClipboardCheck className="h-12 w-12 text-primary" />
           </div>
           <CardTitle className="text-3xl font-bold">Welcome Back!</CardTitle>
-          <CardDescription>Log in to your TaskFlow account.</CardDescription>
+          <CardDescription>Log in to your IntelliTrack account.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">

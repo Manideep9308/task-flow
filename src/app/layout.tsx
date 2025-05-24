@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'TaskFlow',
-  description: 'Manage your tasks efficiently with TaskFlow.',
+  title: 'IntelliTrack',
+  description: 'Manage your tasks efficiently with IntelliTrack.',
 };
 
 export default function RootLayout({

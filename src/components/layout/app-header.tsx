@@ -22,13 +22,13 @@ export function AppHeader() {
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-md sm:px-6">
       <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold md:text-base">
         <ClipboardCheck className="h-7 w-7 text-primary" />
-        <span className="text-xl font-bold">TaskFlow</span>
+        <span className="text-xl font-bold">IntelliTrack</span>
       </Link>
       <div className="ml-auto flex items-center gap-4">
         {user && <AddTaskButton />}
         
         {isLoading ? (
-          <Button variant="ghost" size="icon" className="rounded-full animate-pulse">
+          <Button variant="ghost" size="icon" className="rounded-full animate-pulse" aria-label="User menu">
             <UserCircle className="h-6 w-6" />
           </Button>
         ) : user ? (

@@ -29,6 +29,7 @@ import {
     Clock,
     Lightbulb,
     HelpCircle, 
+    DraftingCompass, // Added for Project Scoper
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -43,6 +44,7 @@ const navItems = [
   { href: '/team-chat', label: 'Team Chat', icon: MessagesSquare },
   { href: '/reports', label: 'Reports', icon: BarChart3 },
   { href: '/idea-validator', label: 'Idea Validator', icon: Lightbulb },
+  { href: '/project-scoping', label: 'Project Scoper', icon: DraftingCompass }, // New Item
 ];
 
 const adminNavItems = [
@@ -56,13 +58,16 @@ export function AppSidebar() {
   const getAvailableNavItems = () => {
     let items = [...navItems];
     if (user?.role === 'admin') {
-      const ideaValidatorIndex = items.findIndex(item => item.href === '/idea-validator');
-      if (ideaValidatorIndex !== -1 && ideaValidatorIndex < items.length -1) {
-        items.splice(ideaValidatorIndex + 1, 0, ...adminNavItems);
-      } else {
+      // Find a logical place to insert admin items, e.g., after core features
+      const reportsIndex = items.findIndex(item => item.href === '/reports'); // Example insertion point
+      if (reportsIndex !== -1 && reportsIndex < items.length -1) {
+        items.splice(reportsIndex + 1, 0, ...adminNavItems);
+      } else { // Fallback: add to end if reference point not found or is last
         items = [...items, ...adminNavItems];
       }
     }
+    // Sort items to ensure consistent order, e.g., alphabetically or by a predefined order
+    // For now, keeping the order as defined, with admin items inserted.
     return items;
   };
   

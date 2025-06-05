@@ -14,4 +14,5 @@ import '@/ai/flows/generate-project-health-report-flow.ts';
 import '@/ai/flows/app-assistant-flow.ts';
 import '@/ai/flows/generate-retrospective-report-flow.ts';
 import '@/ai/flows/validate-project-premise-flow.ts';
+import '@/ai/flows/estimate-project-scope-flow.ts'; // Added new flow
 // import '@/ai/flows/generate-meeting-prep-briefing-flow.ts'; // Removed this flow

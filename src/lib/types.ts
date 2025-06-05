@@ -215,4 +215,37 @@ export interface ValidateProjectPremiseOutput {
   alternativePerspectives: ValidationSection;
 }
 
-// Removed MeetingPrepBriefingInput and MeetingPrepBriefingOutput
+// For AI Project Scoping & Resource Estimator
+export type ProjectDesiredQuality = 'MVP (Minimum Viable Product)' | 'Polished Product' | 'Enterprise-Grade Solution';
+
+export interface EstimateProjectScopeInput {
+  projectIdea: string;
+  coreProblem: string;
+  targetAudience: string;
+  keyFeatures: string; // Changed to string for easier input (user lists features in textarea)
+  desiredQuality?: ProjectDesiredQuality;
+  existingTeamSize?: number; // Optional
+  specificTechPreferences?: string; // Optional, e.g. "Use React and Node.js"
+}
+
+export interface DetailedTimelineItem {
+  phaseOrTaskName: string;
+  estimatedDuration: string; // e.g., "2-3 weeks", "approx. 1 month"
+  description: string;
+  keyActivities: string[]; // Added for more detail from AI
+}
+
+export interface TeamMemberProfile {
+  role: string; // e.g., "Frontend Developer"
+  count: number;
+  keySkills: string[];
+}
+
+export interface EstimateProjectScopeOutput {
+  overallDurationEstimate: string;
+  detailedTimeline: DetailedTimelineItem[];
+  teamComposition: TeamMemberProfile[];
+  technologySuggestions: string[];
+  potentialRisks: string[];
+  summaryAndDisclaimer: string;
+}

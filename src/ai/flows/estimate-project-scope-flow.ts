@@ -82,22 +82,22 @@ Based on these details, please provide the following estimations:
 2.  **Detailed Timeline Breakdown**:
     *   Break the project into 3-7 major, logical phases or epics (e.g., Discovery & Planning, UI/UX Design, Backend Development, Frontend Development, Integration, Testing & QA, Deployment & Launch, Post-launch Support).
     *   For each phase/epic:
-        *   Provide a clear `phaseOrTaskName`.
-        *   Estimate its `estimatedDuration` (e.g., "2-3 weeks", "approx. 1 month").
-        *   Write a brief `description` of what this phase/epic generally entails.
-        *   List 2-3 `keyActivities` (bullet points) within this phase/epic.
+        *   Provide a clear \\\`phaseOrTaskName\\\`.
+        *   Estimate its \\\`estimatedDuration\\\` (e.g., "2-3 weeks", "approx. 1 month").
+        *   Write a brief \\\`description\\\` of what this phase or epic generally entails.
+        *   List 2-3 \\\`keyActivities\\\` (bullet points) within this phase/epic.
     *   The sum of these phase durations should conceptually align with your overall duration estimate.
 
 3.  **Team Composition**:
     *   Suggest a realistic team structure.
-    *   For each `role` (e.g., Project Manager, Frontend Developer, Backend Developer, UI/UX Designer, QA Engineer):
-        *   Estimate the `count` of people needed (can be fractional like 0.5 for part-time involvement if appropriate).
-        *   List 2-3 `keySkills` required for that role specific to this project.
-    *   Consider the optional `existingTeamSize` if provided, and suggest additions or if the current size is sufficient.
+    *   For each \\\`role\\\` (e.g., Project Manager, Frontend Developer, Backend Developer, UI/UX Designer, QA Engineer):
+        *   Estimate the \\\`count\\\` of people needed (can be fractional like 0.5 for part-time involvement if appropriate).
+        *   List 2-3 \\\`keySkills\\\` required for that role specific to this project.
+    *   Consider the optional \\\`existingTeamSize\\\` if provided, and suggest additions or if the current size is sufficient.
 
 4.  **Technology Suggestions**:
     *   Recommend a few key technologies or platforms (e.g., programming languages, frameworks, cloud services) that would be suitable for building this project.
-    *   Acknowledge and incorporate any `specificTechPreferences` if provided by the user.
+    *   Acknowledge and incorporate any \\\`specificTechPreferences\\\` if provided by the user.
 
 5.  **Potential Risks**:
     *   Identify 2-4 high-level potential risks or challenges commonly associated with this type of project or based on the provided details (e.g., scope creep, integration complexities, user adoption challenges, technical debt if rushing an MVP).
@@ -106,7 +106,7 @@ Based on these details, please provide the following estimations:
     *   Start with a brief (1-2 sentence) overall summary of your estimation.
     *   Conclude with a **CRITICAL DISCLAIMER**: "This is a high-level, AI-generated estimate intended for preliminary planning and discussion purposes only. It does not account for all real-world complexities, specific organizational contexts, or unforeseen challenges. Actual project duration, team needs, and costs can vary significantly. This estimate should not be used as a definitive project plan or for binding commitments without further detailed analysis and professional consultation."
 
-Be realistic and base your estimations on common industry practices for software development projects of varying quality levels if specified. If `desiredQuality` is 'MVP', estimations should be leaner. If 'Enterprise-Grade', estimations should account for more rigor, scalability, and robustness.
+Be realistic and base your estimations on common industry practices for software development projects of varying quality levels if specified. If \\\`desiredQuality\\\` is 'MVP', estimations should be leaner. If 'Enterprise-Grade', estimations should account for more rigor, scalability, and robustness.
 Ensure your output strictly adheres to the JSON schema.
 The 'detailedTimeline' should contain at least 3 distinct phases.
 The 'teamComposition' should list at least one role.
@@ -134,3 +134,4 @@ const estimateProjectScopeFlow = ai.defineFlow(
     return output;
   }
 );
+

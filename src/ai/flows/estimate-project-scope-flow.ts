@@ -28,7 +28,7 @@ const EstimateProjectScopeInputSchema = z.object({
   projectIdea: z.string().min(10).describe('A concise name or high-level description of the project idea.'),
   coreProblem: z.string().min(20).describe('The core problem this project aims to solve for its users.'),
   targetAudience: z.string().min(10).describe('The primary target audience or user group for this project.'),
-  keyFeatures: z.string().min(30).describe('A list or detailed description of the key features, functionalities, or deliverables of the project. The more detail, the better the estimation.'),
+  keyFeatures: z.string().min(10).describe('A list or detailed description of the key features, functionalities, or deliverables of the project. The more detail, the better the estimation.'),
   desiredQuality: ProjectDesiredQualityEnum.optional().describe("The desired level of quality and polish for the final product (e.g., 'MVP', 'Polished Product', 'Enterprise-Grade Solution'). This influences effort."),
   existingTeamSize: z.number().int().positive().optional().describe('The number of people already available on the team, if any. Helps ground team size suggestions.'),
   specificTechPreferences: z.string().optional().describe('Any specific technologies or platforms the user prefers or is required to use (e.g., "Must use Python for backend", "Prefer React for frontend").'),
